@@ -13,6 +13,11 @@ import {
   Button,
   ProgressBar,
   Divider,
+  TabGroup,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
 } from '@tremor/react'
 import {
   Plus,
@@ -48,9 +53,12 @@ const DEMO_PROJECTS = [
   { id: '8', name: 'API-шлюз', client: 'ИП Петров А.С.', budget: 600000, spent: 450000, status: 'on_hold' as ProjectStatus, margin: 8 },
 ]
 
-export default function ProjectsPage() {
-  const [filter, setFilter] = useState<'all' | ProjectStatus>('all')
+const TAB_FILTERS = ['all', 'active', 'completed', 'on_hold'] as const
 
+export default function ProjectsPage() {
+  const [tabIndex, setTabIndex] = useState(0)
+
+  const filter = TAB_FILTERS[tabIndex]
   const filtered = filter === 'all' ? DEMO_PROJECTS : DEMO_PROJECTS.filter((p) => p.status === filter)
 
   const totalBudget = DEMO_PROJECTS.reduce((s, p) => s + p.budget, 0)
@@ -61,10 +69,10 @@ export default function ProjectsPage() {
     <motion.div variants={container} initial="hidden" animate="show" className="p-6 space-y-6">
       {/* Header */}
       <Flex justifyContent="between" alignItems="center">
-        <div>
+        <Flex flexDirection="col">
           <Title>Проекты</Title>
           <Text className="text-tremor-content-subtle mt-1">Управление проектами и рентабельность</Text>
-        </div>
+        </Flex>
         <Button variant="primary" size="sm" icon={Plus}>
           Новый проект
         </Button>
@@ -89,83 +97,85 @@ export default function ProjectsPage() {
         </Card>
       </Grid>
 
-      {/* Filter buttons */}
-      <Flex alignItems="center" className="gap-2">
-        {(['all', 'active', 'completed', 'on_hold'] as const).map((f) => (
-          <Button
-            key={f}
-            variant={filter === f ? 'primary' : 'secondary'}
-            size="xs"
-            onClick={() => setFilter(f)}
-          >
-            {f === 'all' ? 'Все' : statusConfig[f].label}
-          </Button>
-        ))}
-      </Flex>
+      {/* Filter tabs + project grid */}
+      <Card>
+        <TabGroup index={tabIndex} onIndexChange={setTabIndex}>
+          <TabList>
+            <Tab>Все</Tab>
+            <Tab>Активные</Tab>
+            <Tab>Завершённые</Tab>
+            <Tab>Приостановленные</Tab>
+          </TabList>
+          <TabPanels>
+            {TAB_FILTERS.map((f) => (
+              <TabPanel key={f}>
+                <Grid numItems={1} numItemsMd={2} numItemsLg={3} className="gap-4 mt-4">
+                  {filtered.map((project, i) => {
+                    const cfg = statusConfig[project.status]
+                    const Icon = cfg.icon
+                    const remaining = project.budget - project.spent
+                    const progressPct = Math.round((project.spent / project.budget) * 100)
 
-      {/* Project Cards Grid */}
-      <Grid numItems={1} numItemsMd={2} numItemsLg={3} className="gap-4">
-        {filtered.map((project, i) => {
-          const cfg = statusConfig[project.status]
-          const Icon = cfg.icon
-          const remaining = project.budget - project.spent
-          const progressPct = Math.round((project.spent / project.budget) * 100)
+                    return (
+                      <motion.div
+                        key={project.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.06 }}
+                      >
+                        <Card className="h-full">
+                          <Flex justifyContent="between" alignItems="start">
+                            <Flex alignItems="center" className="gap-2">
+                              <div className="h-8 w-8 rounded-lg bg-tremor-background-muted flex items-center justify-center">
+                                <FolderKanban className="h-4 w-4 text-tremor-content-subtle" />
+                              </div>
+                              <Flex flexDirection="col">
+                                <Text className="text-tremor-content font-medium">{project.name}</Text>
+                                <Text className="text-tremor-content-subtle text-xs">{project.client}</Text>
+                              </Flex>
+                            </Flex>
+                            <Badge size="xs" color={cfg.color}>
+                              <Icon className="h-3 w-3 mr-1" />
+                              {cfg.label}
+                            </Badge>
+                          </Flex>
 
-          return (
-            <motion.div
-              key={project.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }}
-            >
-              <Card className="h-full">
-                <Flex justifyContent="between" alignItems="start">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-tremor-background-muted flex items-center justify-center">
-                      <FolderKanban className="h-4 w-4 text-tremor-content-subtle" />
-                    </div>
-                    <div>
-                      <Text className="text-tremor-content font-medium">{project.name}</Text>
-                      <Text className="text-tremor-content-subtle text-xs">{project.client}</Text>
-                    </div>
-                  </div>
-                  <Badge size="xs" color={cfg.color}>
-                    <Icon className="h-3 w-3 mr-1" />
-                    {cfg.label}
-                  </Badge>
-                </Flex>
+                          <Divider className="my-3" />
 
-                <Divider className="my-3" />
+                          <Flex flexDirection="col" className="gap-3">
+                            <Flex justifyContent="between" alignItems="center">
+                              <Text className="text-tremor-content-subtle text-xs">Бюджет</Text>
+                              <Text className="text-tremor-content text-sm font-medium tabular-nums">{formatMoney(project.budget)}</Text>
+                            </Flex>
+                            <Flex justifyContent="between" alignItems="center">
+                              <Text className="text-tremor-content-subtle text-xs">Израсходовано</Text>
+                              <Text className="text-danger text-sm font-medium tabular-nums">{formatMoney(project.spent)}</Text>
+                            </Flex>
+                            <Flex justifyContent="between" alignItems="center">
+                              <Text className="text-tremor-content-subtle text-xs">Остаток</Text>
+                              <Text className="text-success text-sm font-medium tabular-nums">{formatMoney(remaining)}</Text>
+                            </Flex>
 
-                <div className="space-y-3">
-                  <Flex justifyContent="between" alignItems="center">
-                    <Text className="text-tremor-content-subtle text-xs">Бюджет</Text>
-                    <Text className="text-tremor-content text-sm font-medium tabular-nums">{formatMoney(project.budget)}</Text>
-                  </Flex>
-                  <Flex justifyContent="between" alignItems="center">
-                    <Text className="text-tremor-content-subtle text-xs">Израсходовано</Text>
-                    <Text className="text-danger text-sm font-medium tabular-nums">{formatMoney(project.spent)}</Text>
-                  </Flex>
-                  <Flex justifyContent="between" alignItems="center">
-                    <Text className="text-tremor-content-subtle text-xs">Остаток</Text>
-                    <Text className="text-success text-sm font-medium tabular-nums">{formatMoney(remaining)}</Text>
-                  </Flex>
-
-                  <ProgressBar
-                    value={progressPct}
-                    color={progressPct > 90 ? 'red' : progressPct > 70 ? 'amber' : 'emerald'}
-                    className="mt-2"
-                  />
-                  <Flex justifyContent="between">
-                    <Text className="text-tremor-content-subtle text-xs">{progressPct}% использовано</Text>
-                    <Text className="text-tremor-content-subtle text-xs">Маржа: {project.margin}%</Text>
-                  </Flex>
-                </div>
-              </Card>
-            </motion.div>
-          )
-        })}
-      </Grid>
+                            <ProgressBar
+                              value={progressPct}
+                              color={progressPct > 90 ? 'red' : progressPct > 70 ? 'amber' : 'emerald'}
+                              className="mt-2"
+                            />
+                            <Flex justifyContent="between">
+                              <Text className="text-tremor-content-subtle text-xs">{progressPct}% использовано</Text>
+                              <Text className="text-tremor-content-subtle text-xs">Маржа: {project.margin}%</Text>
+                            </Flex>
+                          </Flex>
+                        </Card>
+                      </motion.div>
+                    )
+                  })}
+                </Grid>
+              </TabPanel>
+            ))}
+          </TabPanels>
+        </TabGroup>
+      </Card>
     </motion.div>
   )
 }

@@ -6,6 +6,7 @@ import {
   Text,
   Title,
   Card,
+  Grid,
   Metric,
   Badge,
   List,
@@ -62,15 +63,15 @@ export default function CategoriesPage() {
     <motion.div variants={container} initial="hidden" animate="show" className="p-6 space-y-6">
       {/* Header */}
       <Flex justifyContent="between" alignItems="center">
-        <div>
+        <Flex flexDirection="col">
           <Title>Категории</Title>
           <Text className="text-tremor-content-subtle mt-1">Управление категориями доходов и расходов</Text>
-        </div>
+        </Flex>
       </Flex>
 
       {/* KPI cards */}
-      <Flex className="gap-4">
-        <Card className="flex-1">
+      <Grid numItems={1} numItemsSm={2} className="gap-4">
+        <Card>
           <Flex alignItems="center" className="gap-2">
             <TrendingUp className="h-4 w-4 text-emerald-500" />
             <Text className="text-tremor-content-subtle">Доходы</Text>
@@ -78,7 +79,7 @@ export default function CategoriesPage() {
           <Metric className="text-success">{formatMoney(totalIncome)}</Metric>
           <Text className="text-tremor-content-subtle text-xs mt-1">{incomeCategories.length} категорий</Text>
         </Card>
-        <Card className="flex-1">
+        <Card>
           <Flex alignItems="center" className="gap-2">
             <TrendingDown className="h-4 w-4 text-red-500" />
             <Text className="text-tremor-content-subtle">Расходы</Text>
@@ -86,7 +87,7 @@ export default function CategoriesPage() {
           <Metric className="text-danger">{formatMoney(totalExpense)}</Metric>
           <Text className="text-tremor-content-subtle text-xs mt-1">{expenseCategories.length} категорий</Text>
         </Card>
-      </Flex>
+      </Grid>
 
       {/* Tabs */}
       <TabGroup>

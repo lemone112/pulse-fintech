@@ -85,10 +85,10 @@ export default function PnlPage() {
     <motion.div variants={container} initial="hidden" animate="show" className="p-6 space-y-6">
       {/* Header */}
       <Flex justifyContent="between" alignItems="center">
-        <div>
+        <Flex flexDirection="col">
           <Title>Отчёт о прибылях и убытках</Title>
           <Text className="text-tremor-content-subtle mt-1">ПиУ за Q2 2026 (апрель — июнь)</Text>
-        </div>
+        </Flex>
         <BadgeDelta deltaType="increase" size="sm" />
       </Flex>
 

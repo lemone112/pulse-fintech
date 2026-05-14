@@ -83,10 +83,10 @@ export default function TransactionsPage() {
     <motion.div variants={container} initial="hidden" animate="show" className="p-6 space-y-6">
       {/* Header */}
       <Flex justifyContent="between" alignItems="center">
-        <div>
+        <Flex flexDirection="col">
           <Title>Операции</Title>
           <Text className="text-tremor-content-subtle mt-1">Список финансовых операций</Text>
-        </div>
+        </Flex>
         <Flex justifyContent="end" alignItems="center" className="gap-2">
           <Button variant="secondary" size="sm" icon={Download}>
             Экспорт
@@ -115,7 +115,7 @@ export default function TransactionsPage() {
 
       {/* Search + Tabs */}
       <Card>
-        <div className="space-y-4">
+        <Flex flexDirection="col" className="gap-4">
           <Flex justifyContent="between" alignItems="center">
             <TextInput
               placeholder="Поиск по операции..."
@@ -208,7 +208,7 @@ export default function TransactionsPage() {
               <Text className="text-tremor-content-subtle">Операции не найдены</Text>
             </Flex>
           )}
-        </div>
+        </Flex>
       </Card>
     </motion.div>
   )

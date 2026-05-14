@@ -94,10 +94,10 @@ export default function ApprovalsPage() {
     <motion.div variants={container} initial="hidden" animate="show" className="p-6 space-y-6">
       {/* Header */}
       <Flex justifyContent="between" alignItems="center">
-        <div>
+        <Flex flexDirection="col">
           <Title>Согласование</Title>
           <Text className="text-tremor-content-subtle mt-1">Очередь документов на согласование</Text>
-        </div>
+        </Flex>
       </Flex>
 
       {/* KPI Cards */}

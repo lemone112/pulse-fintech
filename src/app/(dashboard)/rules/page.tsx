@@ -160,10 +160,10 @@ export default function RulesPage() {
     <motion.div variants={container} initial="hidden" animate="show" className="p-6 space-y-6">
       {/* Header */}
       <Flex justifyContent="between" alignItems="center">
-        <div>
+        <Flex flexDirection="col">
           <Title>Правила автоматизации</Title>
           <Text className="text-tremor-content-subtle mt-1">Автоматическая классификация и согласование операций</Text>
-        </div>
+        </Flex>
         <Button variant="primary" size="sm" icon={Plus}>
           Правило
         </Button>
@@ -189,7 +189,7 @@ export default function RulesPage() {
       </Grid>
 
       {/* Rules list */}
-      <div className="space-y-3">
+      <Flex flexDirection="col" className="gap-3">
         {rules.map((rule, index) => {
           const actionConfig = actionColors[rule.actionType]
           const ConditionIcon = conditionIcons[rule.conditionType]
@@ -258,7 +258,7 @@ export default function RulesPage() {
             </motion.div>
           )
         })}
-      </div>
+      </Flex>
     </motion.div>
   )
 }

@@ -77,10 +77,10 @@ export default function TrialBalancePage() {
     <motion.div variants={container} initial="hidden" animate="show" className="p-6 space-y-6">
       {/* Header */}
       <Flex justifyContent="between" alignItems="center">
-        <div>
+        <Flex flexDirection="col">
           <Title>Оборотная ведомость</Title>
           <Text className="text-tremor-content-subtle mt-1">За Q2 2026 (апрель — июнь)</Text>
-        </div>
+        </Flex>
       </Flex>
 
       {/* KPI cards */}

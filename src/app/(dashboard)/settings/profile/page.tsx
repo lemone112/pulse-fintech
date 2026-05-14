@@ -11,11 +11,12 @@ const container = {
 
 export default function ProfilePage() {
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="p-6 space-y-6 max-w-2xl">
-      <div>
-        <Title>Профиль</Title>
-        <Text className="text-tremor-content-subtle mt-1">Управление личными данными и настройками</Text>
-      </div>
+    <motion.div variants={container} initial="hidden" animate="show" className="p-6 space-y-6">
+      <Flex flexDirection="col" className="max-w-2xl gap-6">
+        <Flex flexDirection="col">
+          <Title>Профиль</Title>
+          <Text className="text-tremor-content-subtle mt-1">Управление личными данными и настройками</Text>
+        </Flex>
 
       <Divider />
 
@@ -33,68 +34,69 @@ export default function ProfilePage() {
       <Divider />
 
       {/* Form */}
-      <div className="space-y-4">
-        <Grid numItems={2} className="gap-4">
-          <div className="space-y-2">
+      <Flex flexDirection="col" className="gap-4">
+        <Grid numItems={1} numItemsSm={2} className="gap-4">
+          <Flex flexDirection="col" className="gap-2">
             <Text className="text-sm text-tremor-content-subtle">Имя</Text>
             <TextInput defaultValue="Алексей" />
-          </div>
-          <div className="space-y-2">
+          </Flex>
+          <Flex flexDirection="col" className="gap-2">
             <Text className="text-sm text-tremor-content-subtle">Фамилия</Text>
             <TextInput defaultValue="Иванов" />
-          </div>
+          </Flex>
         </Grid>
 
-        <div className="space-y-2">
+        <Flex flexDirection="col" className="gap-2">
           <Text className="text-sm text-tremor-content-subtle">Email</Text>
           <TextInput icon={Mail} defaultValue="alexey@pulse.ru" />
-        </div>
+        </Flex>
 
-        <div className="space-y-2">
+        <Flex flexDirection="col" className="gap-2">
           <Text className="text-sm text-tremor-content-subtle">Телефон</Text>
           <TextInput icon={Phone} defaultValue="+7 (999) 123-45-67" />
-        </div>
+        </Flex>
 
-        <div className="space-y-2">
+        <Flex flexDirection="col" className="gap-2">
           <Text className="text-sm text-tremor-content-subtle">Компания</Text>
           <TextInput icon={Building2} defaultValue="ООО «Пульс»" />
-        </div>
-      </div>
+        </Flex>
+      </Flex>
 
       <Divider />
 
       {/* Notification settings */}
-      <div className="space-y-4">
+      <Flex flexDirection="col" className="gap-4">
         <Text className="text-sm font-medium text-tremor-content-subtle uppercase tracking-wider">Уведомления</Text>
-        <div className="space-y-3">
+        <Flex flexDirection="col" className="gap-3">
           <Flex justifyContent="between" alignItems="center">
-            <div>
+            <Flex flexDirection="col">
               <Text className="text-sm font-medium">Email уведомления</Text>
               <Text className="text-xs text-tremor-content-subtle">Получать уведомления на почту</Text>
-            </div>
+            </Flex>
             <Switch defaultChecked />
           </Flex>
           <Flex justifyContent="between" alignItems="center">
-            <div>
+            <Flex flexDirection="col">
               <Text className="text-sm font-medium">Новые транзакции</Text>
               <Text className="text-xs text-tremor-content-subtle">Уведомлять о новых операциях</Text>
-            </div>
+            </Flex>
             <Switch defaultChecked />
           </Flex>
           <Flex justifyContent="between" alignItems="center">
-            <div>
+            <Flex flexDirection="col">
               <Text className="text-sm font-medium">Согласование документов</Text>
               <Text className="text-xs text-tremor-content-subtle">Уведомлять о новых запросах</Text>
-            </div>
+            </Flex>
             <Switch defaultChecked />
           </Flex>
-        </div>
-      </div>
+        </Flex>
+      </Flex>
 
       <Flex justifyContent="end" className="gap-3">
         <Button variant="secondary">Отмена</Button>
         <Button variant="primary">Сохранить</Button>
       </Flex>
+    </Flex>
     </motion.div>
   )
 }

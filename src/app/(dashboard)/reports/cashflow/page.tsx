@@ -62,10 +62,10 @@ export default function CashflowPage() {
     <motion.div variants={container} initial="hidden" animate="show" className="p-6 space-y-6">
       {/* Header */}
       <Flex justifyContent="between" alignItems="center">
-        <div>
+        <Flex flexDirection="col">
           <Title>Отчёт о движении денежных средств</Title>
           <Text className="text-tremor-content-subtle mt-1">ДДС за октябрь 2024 — март 2025</Text>
-        </div>
+        </Flex>
         <BadgeDelta deltaType="increase" size="sm" />
       </Flex>
 
@@ -105,40 +105,38 @@ export default function CashflowPage() {
       <Grid numItems={1} numItemsLg={2} className="gap-6">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <Card>
-            <div className="p-4">
-              <Text className="text-tremor-content-subtle font-medium mb-4">ДДС по видам деятельности</Text>
-              <BarChart
-                data={cashflowData}
-                index="month"
-                categories={['operating', 'investing', 'financing']}
-                colors={['emerald', 'red', 'blue']}
-                valueFormatter={formatCompact}
-                showGridLines={true}
-                showAnimation={true}
-                showLegend={true}
-                showTooltip={true}
-                yAxisWidth={60}
-              />
-            </div>
+            <Title className="text-tremor-content-subtle text-sm font-medium">ДДС по видам деятельности</Title>
+            <BarChart
+              className="mt-4"
+              data={cashflowData}
+              index="month"
+              categories={['operating', 'investing', 'financing']}
+              colors={['emerald', 'red', 'blue']}
+              valueFormatter={formatCompact}
+              showGridLines={true}
+              showAnimation={true}
+              showLegend={true}
+              showTooltip={true}
+              yAxisWidth={60}
+            />
           </Card>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           <Card>
-            <div className="p-4">
-              <Text className="text-tremor-content-subtle font-medium mb-4">Динамика остатка</Text>
-              <AreaChart
-                data={cashflowData}
-                index="month"
-                categories={['balance']}
-                colors={['emerald']}
-                valueFormatter={formatCompact}
-                showGridLines={true}
-                showAnimation={true}
-                showLegend={true}
-                showTooltip={true}
-                yAxisWidth={60}
-              />
-            </div>
+            <Title className="text-tremor-content-subtle text-sm font-medium">Динамика остатка</Title>
+            <AreaChart
+              className="mt-4"
+              data={cashflowData}
+              index="month"
+              categories={['balance']}
+              colors={['emerald']}
+              valueFormatter={formatCompact}
+              showGridLines={true}
+              showAnimation={true}
+              showLegend={true}
+              showTooltip={true}
+              yAxisWidth={60}
+            />
           </Card>
         </motion.div>
       </Grid>

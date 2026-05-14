@@ -80,34 +80,34 @@ export default function CounterpartyDetailPage() {
           className="h-9 w-9 p-0"
         />
         <Flex alignItems="center" className="gap-3">
-          <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Building2 className="h-6 w-6 text-primary" />
+          <div className="h-12 w-12 rounded-lg bg-tremor-brand-subtle flex items-center justify-center">
+            <Building2 className="h-6 w-6 text-tremor-brand" />
           </div>
-          <div>
+          <Flex flexDirection="col">
             <Title>{data.name}</Title>
             <Text className="text-tremor-content-subtle text-sm">ИНН: {data.inn} · {data.kind}</Text>
-          </div>
+          </Flex>
         </Flex>
       </Flex>
 
       {/* Quick stats */}
-      <Grid numItems={3} className="gap-4">
+      <Grid numItems={1} numItemsSm={3} className="gap-4">
         <Card>
           <Text className="text-tremor-content-subtle text-xs uppercase tracking-wider">Баланс</Text>
           <Text className={cn('text-xl tabular-nums font-semibold mt-1', data.balance >= 0 ? 'text-success' : 'text-danger')}>
-            {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(data.balance)}
+            {formatSigned(data.balance)}
           </Text>
         </Card>
         <Card>
           <Text className="text-tremor-content-subtle text-xs uppercase tracking-wider">Доходы</Text>
           <Text className="text-xl tabular-nums font-semibold mt-1 text-success">
-            {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(data.totalIncome)}
+            {formatMoney(data.totalIncome)}
           </Text>
         </Card>
         <Card>
           <Text className="text-tremor-content-subtle text-xs uppercase tracking-wider">Расходы</Text>
           <Text className="text-xl tabular-nums font-semibold mt-1 text-danger">
-            {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(data.totalExpense)}
+            {formatMoney(data.totalExpense)}
           </Text>
         </Card>
       </Grid>
@@ -124,36 +124,36 @@ export default function CounterpartyDetailPage() {
           <TabPanel className="mt-4">
             <Card>
               <div className="space-y-4">
-                <Grid numItems={2} className="gap-4">
-                  <div className="space-y-1">
+                <Grid numItems={1} numItemsSm={2} className="gap-4">
+                  <Flex flexDirection="col" className="gap-1">
                     <Text className="text-tremor-content-subtle text-xs">Телефон</Text>
-                    <Text className="text-sm flex items-center gap-2"><Phone className="h-3.5 w-3.5" />{data.phone}</Text>
-                  </div>
-                  <div className="space-y-1">
+                    <Flex alignItems="center" className="gap-2"><Phone className="h-3.5 w-3.5" /><Text className="text-sm">{data.phone}</Text></Flex>
+                  </Flex>
+                  <Flex flexDirection="col" className="gap-1">
                     <Text className="text-tremor-content-subtle text-xs">Email</Text>
-                    <Text className="text-sm flex items-center gap-2"><Mail className="h-3.5 w-3.5" />{data.email}</Text>
-                  </div>
+                    <Flex alignItems="center" className="gap-2"><Mail className="h-3.5 w-3.5" /><Text className="text-sm">{data.email}</Text></Flex>
+                  </Flex>
                   {data.website && (
-                    <div className="space-y-1">
+                    <Flex flexDirection="col" className="gap-1">
                       <Text className="text-tremor-content-subtle text-xs">Сайт</Text>
-                      <Text className="text-sm flex items-center gap-2"><Globe className="h-3.5 w-3.5" />{data.website}</Text>
-                    </div>
+                      <Flex alignItems="center" className="gap-2"><Globe className="h-3.5 w-3.5" /><Text className="text-sm">{data.website}</Text></Flex>
+                    </Flex>
                   )}
-                  <div className="space-y-1">
+                  <Flex flexDirection="col" className="gap-1">
                     <Text className="text-tremor-content-subtle text-xs">Адрес</Text>
-                    <Text className="text-sm flex items-center gap-2"><MapPin className="h-3.5 w-3.5" />{data.address}</Text>
-                  </div>
+                    <Flex alignItems="center" className="gap-2"><MapPin className="h-3.5 w-3.5" /><Text className="text-sm">{data.address}</Text></Flex>
+                  </Flex>
                 </Grid>
                 <Divider />
-                <Grid numItems={2} className="gap-4">
-                  <div className="space-y-1">
+                <Grid numItems={1} numItemsSm={2} className="gap-4">
+                  <Flex flexDirection="col" className="gap-1">
                     <Text className="text-tremor-content-subtle text-xs">Количество операций</Text>
                     <Text className="text-sm font-medium">{data.transactionCount}</Text>
-                  </div>
-                  <div className="space-y-1">
+                  </Flex>
+                  <Flex flexDirection="col" className="gap-1">
                     <Text className="text-tremor-content-subtle text-xs">ИНН</Text>
                     <Text className="text-sm font-medium">{data.inn}</Text>
-                  </div>
+                  </Flex>
                 </Grid>
               </div>
             </Card>
@@ -185,7 +185,7 @@ export default function CounterpartyDetailPage() {
                         'text-sm tabular-nums font-medium',
                         tx.direction === 'in' ? 'text-success' : 'text-danger',
                       )}>
-                        {tx.direction === 'in' ? '+' : '−'}{new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(tx.amount)} ₽
+                        {tx.direction === 'in' ? '+' : '−'}{formatMoney(tx.amount)}
                       </Text>
                     </Flex>
                   </ListItem>

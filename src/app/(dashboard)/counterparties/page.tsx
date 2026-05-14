@@ -37,10 +37,10 @@ export default function CounterpartiesPage() {
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="p-6 space-y-6">
       <Flex justifyContent="between" alignItems="center">
-        <div>
+        <Flex flexDirection="col">
           <Title>Контрагенты</Title>
           <Text className="text-tremor-content-subtle mt-1">Управление контрагентами и документами</Text>
-        </div>
+        </Flex>
         <Button variant="primary" icon={Plus}>
           Добавить
         </Button>
@@ -48,14 +48,14 @@ export default function CounterpartiesPage() {
 
       {/* Search & filters */}
       <Flex alignItems="center" className="gap-3">
-        <div className="flex-1 max-w-sm">
+        <Flex className="flex-1 max-w-sm">
           <TextInput
             icon={Search}
             value={search}
             onValueChange={setSearch}
             placeholder="Поиск по названию или ИНН..."
           />
-        </div>
+        </Flex>
         <Button
           variant="secondary"
           size="sm"
@@ -86,12 +86,12 @@ export default function CounterpartiesPage() {
                       <div className="h-9 w-9 rounded-lg bg-tremor-brand-subtle flex items-center justify-center">
                         <Building2 className="h-4 w-4 text-tremor-brand" />
                       </div>
-                      <div>
+                      <Flex flexDirection="col">
                         <Text className="text-tremor-content">{counterparty.name}</Text>
                         <Text className="text-tremor-content-subtle text-xs">ИНН: {counterparty.inn} · {counterparty.kind}</Text>
-                      </div>
+                      </Flex>
                     </Flex>
-                    <div className="text-right">
+                    <Flex flexDirection="col" alignItems="end">
                       <Text className={cn(
                         'text-sm tabular-nums font-medium',
                         counterparty.balance > 0 && 'text-success',
@@ -103,7 +103,7 @@ export default function CounterpartiesPage() {
                       <Text className="text-tremor-content-subtle text-xs">
                         {counterparty.balance > 0 ? 'Нам должны' : counterparty.balance < 0 ? 'Мы должны' : 'Нет долга'}
                       </Text>
-                    </div>
+                    </Flex>
                   </Flex>
                 </ListItem>
               </Link>

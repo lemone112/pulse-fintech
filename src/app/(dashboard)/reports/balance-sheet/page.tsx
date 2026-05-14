@@ -90,10 +90,10 @@ export default function BalanceSheetPage() {
     <motion.div variants={container} initial="hidden" animate="show" className="p-6 space-y-6">
       {/* Header */}
       <Flex justifyContent="between" alignItems="center">
-        <div>
+        <Flex flexDirection="col">
           <Title>Бухгалтерский баланс</Title>
           <Text className="text-tremor-content-subtle mt-1">На 30 июня 2026 г.</Text>
-        </div>
+        </Flex>
         <BadgeDelta deltaType="increase" size="sm" />
       </Flex>
 

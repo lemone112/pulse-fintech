@@ -89,10 +89,10 @@ export default function InvoicesPage() {
     <motion.div variants={container} initial="hidden" animate="show" className="p-6 space-y-6">
       {/* Header */}
       <Flex justifyContent="between" alignItems="center">
-        <div>
+        <Flex flexDirection="col">
           <Title>Счета</Title>
           <Text className="text-tremor-content-subtle mt-1">Управление счетами на оплату</Text>
-        </div>
+        </Flex>
         <Button variant="primary" size="sm" icon={Plus}>
           Новый счёт
         </Button>

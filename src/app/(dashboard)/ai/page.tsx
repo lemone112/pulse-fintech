@@ -25,10 +25,10 @@ export default function AIPage() {
     >
       {/* Header */}
       <Flex justifyContent="between" alignItems="center" className="border-b border-tremor-border px-6 py-4">
-        <div>
+        <Flex flexDirection="col">
           <Title>AI Ассистент</Title>
           <Text className="text-tremor-content-subtle mt-0.5 text-sm">Интеллектуальный помощник для финансового анализа</Text>
-        </div>
+        </Flex>
         <Button
           variant="light"
           size="sm"

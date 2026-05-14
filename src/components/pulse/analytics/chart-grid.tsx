@@ -20,6 +20,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { Plus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Grid, Card, Flex, Text } from '@tremor/react'
 
 import type { ChartConfig } from './chart-presets'
 import { CHART_PRESETS } from './chart-presets'
@@ -160,7 +161,7 @@ export function ChartGrid() {
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={charts.map((c) => c.id)} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <Grid numItems={1} numItemsMd={2} numItemsLg={3} className="gap-6">
             <AnimatePresence mode="popLayout">
               {charts.map((config) => (
                 <SortableChartCard
@@ -183,14 +184,14 @@ export function ChartGrid() {
                 setEditingConfig(null)
                 setModalOpen(true)
               }}
-              className="rounded-lg border-2 border-dashed border-border bg-transparent hover:bg-muted/50 transition-colors flex flex-col items-center justify-center min-h-[340px] gap-3 text-muted-foreground hover:text-foreground"
+              className="rounded-lg border-2 border-dashed border-tremor-border bg-transparent hover:bg-tremor-background-muted transition-colors flex flex-col items-center justify-center min-h-[340px] gap-3 text-tremor-content-subtle hover:text-tremor-content"
             >
               <div className="h-10 w-10 rounded-full border-2 border-dashed border-current flex items-center justify-center">
                 <Plus className="h-5 w-5" />
               </div>
               <span className="text-sm font-medium">Добавить график</span>
             </motion.button>
-          </div>
+          </Grid>
         </SortableContext>
       </DndContext>
 

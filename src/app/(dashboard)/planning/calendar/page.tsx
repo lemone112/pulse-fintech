@@ -68,10 +68,10 @@ export default function CalendarPage() {
     <motion.div variants={container} initial="hidden" animate="show" className="p-6 space-y-6">
       {/* Header */}
       <Flex justifyContent="between" alignItems="center">
-        <div>
+        <Flex flexDirection="col">
           <Title>Финансовый календарь</Title>
           <Text className="text-tremor-content-subtle mt-1">Май 2026</Text>
-        </div>
+        </Flex>
         <Button variant="primary" size="sm" icon={Plus}>
           Событие
         </Button>
@@ -103,7 +103,7 @@ export default function CalendarPage() {
       </Grid>
 
       {/* Events by week */}
-      <div className="space-y-4">
+      <Flex flexDirection="col" className="gap-4">
         {[1, 2, 3, 4, 5].map((week) => {
           const weekEvents = events.filter((e) => e.week === week)
           if (weekEvents.length === 0) return null
@@ -161,7 +161,7 @@ export default function CalendarPage() {
             </motion.div>
           )
         })}
-      </div>
+      </Flex>
     </motion.div>
   )
 }
