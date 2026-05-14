@@ -46,3 +46,50 @@
 - `src/components/pulse/documents/document-card.tsx`
 - `src/components/pulse/command-palette.tsx`
 - `next.config.ts`
+
+## Phase 2: Tremor-first Layout & Templates (Task 6-a)
+
+**Date**: 2026-05-14
+**Commit**: `4eaf86e`
+
+### Changes Made
+
+| Step | Description | Status |
+|------|-------------|--------|
+| 26 | Replace dashboard layout with Tremor Flex structure + DashboardHeader with breadcrumbs and theme toggle | ✅ Done |
+| 27 | Rebuild sidebar with Tremor Button, Icon, collapsible, user avatar section, theme toggle | ✅ Done |
+| 35 | Create PulseLayout wrapper template with breadcrumbs, tabs, title/subtitle/actions | ✅ Done |
+| 36 | Create PulsePage template + PageHeader + ThemeToggle components | ✅ Done |
+
+### Key Decisions
+
+1. **Collapsible sidebar** — Added `collapsed`/`onToggleCollapse` props controlled from the dashboard layout. Width transitions from 256px to 68px with Tremor `Button` + `Icon` (ChevronsLeft/ChevronsRight). Collapsed state shows only icons with `title` tooltips.
+
+2. **ThemeToggle using `useSyncExternalStore`** — Avoids the `useEffect(() => setMounted(true))` pattern that triggers ESLint's `react-hooks/set-state-in-effect` rule. Uses `useSyncExternalStore` with `getServerSnapshot() => false` for SSR-safe hydration.
+
+3. **DashboardHeader** — Sticky header with breadcrumbs auto-built from pathname via `breadcrumbMap`, command palette trigger, and ThemeToggle. Uses `bg-tremor-background/95 backdrop-blur-sm` for frosted glass effect.
+
+4. **PulseLayout vs PulsePage** — Two distinct templates:
+   - `PulseLayout`: Full-featured with breadcrumbs, tab navigation (Tremor `TabGroup`), and optional Card wrapper
+   - `PulsePage`: Simpler page template with PageHeader, Card content, and optional footer (pagination)
+
+5. **User avatar section** — Sidebar bottom section with avatar initials ("АД"), name, email, ThemeToggle, and logout button. Hidden when collapsed.
+
+6. **Tremor-first enhancements** — KPI cards use `Bold`/`BadgeDelta` properly, dashboard page uses `Subtitle` instead of `Text` for descriptions, analytics uses `Badge` for presets.
+
+### Files Created (6)
+
+- `src/components/pulse/layout/index.ts` — barrel exports
+- `src/components/pulse/layout/theme-toggle.tsx` — ThemeToggle component
+- `src/components/pulse/layout/dashboard-header.tsx` — header with breadcrumbs
+- `src/components/pulse/layout/pulse-layout.tsx` — PulseLayout template
+- `src/components/pulse/layout/pulse-page.tsx` — PulsePage template
+- `src/components/pulse/layout/page-header.tsx` — PageHeader component
+
+### Files Modified (5)
+
+- `src/app/(dashboard)/layout.tsx` — Tremor Flex layout with collapsed state
+- `src/components/pulse/sidebar.tsx` — collapsible, Tremor Button/Icon, avatar
+- `src/app/(dashboard)/dashboard/page.tsx` — Tremor-first improvements
+- `src/app/(dashboard)/analytics/page.tsx` — Tremor Badge, Subtitle
+- `src/components/pulse/overview/kpi-card.tsx` — Bold, BadgeDelta repositioning

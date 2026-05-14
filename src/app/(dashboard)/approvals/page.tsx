@@ -25,14 +25,12 @@ import {
   User,
   Calendar,
 } from 'lucide-react'
+import { formatMoney } from '@/lib/utils'
 
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
 }
-
-const rub = (v: number) =>
-  new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(v)
 
 type ApprovalType = 'payment' | 'contract' | 'invoice' | 'expense'
 
@@ -113,7 +111,7 @@ export default function ApprovalsPage() {
         </Card>
         <Card>
           <Text className="text-tremor-content-subtle">Сумма на согласовании</Text>
-          <Metric className="text-amber-500">{rub(totalPendingAmount)}</Metric>
+          <Metric className="text-amber-500">{formatMoney(totalPendingAmount)}</Metric>
         </Card>
         <Card>
           <Text className="text-tremor-content-subtle">Решено</Text>
@@ -165,7 +163,7 @@ export default function ApprovalsPage() {
                     </Flex>
                     <Flex alignItems="center" className="gap-3">
                       <Text className="text-tremor-content tabular-nums font-medium">
-                        {rub(approval.amount)}
+                        {formatMoney(approval.amount)}
                       </Text>
                       <Flex className="gap-1">
                         <Button
@@ -233,7 +231,7 @@ export default function ApprovalsPage() {
                         </div>
                       </Flex>
                       <Text className="text-tremor-content-subtle tabular-nums text-sm">
-                        {rub(approval.amount)}
+                        {formatMoney(approval.amount)}
                       </Text>
                     </Flex>
                   </ListItem>

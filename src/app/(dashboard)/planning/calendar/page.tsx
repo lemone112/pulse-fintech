@@ -15,7 +15,7 @@ import {
   Button,
 } from '@tremor/react'
 import { Calendar, CreditCard, AlertCircle, Banknote, FileCheck, Plus } from 'lucide-react'
-import { cn, formatMoney } from '@/lib/utils'
+import { formatMoney } from '@/lib/utils'
 
 const container = {
   hidden: { opacity: 0 },
@@ -129,16 +129,9 @@ export default function CalendarPage() {
                       <ListItem key={event.id}>
                         <Flex alignItems="center" justifyContent="between">
                           <Flex alignItems="center" className="gap-3">
-                            <div className={cn(
-                              'flex h-8 w-8 items-center justify-center rounded-md',
-                              event.type === 'invoice' && 'bg-blue-50 text-blue-600',
-                              event.type === 'tax' && 'bg-red-50 text-red-600',
-                              event.type === 'salary' && 'bg-emerald-50 text-emerald-600',
-                              event.type === 'dividend' && 'bg-amber-50 text-amber-600',
-                              event.type === 'edo' && 'bg-gray-50 text-gray-600',
-                            )}>
+                            <Badge size="md" color={config.color}>
                               <Icon className="h-4 w-4" />
-                            </div>
+                            </Badge>
                             <div>
                               <Text className="text-tremor-content text-sm font-medium">{event.title}</Text>
                               <Flex alignItems="center" className="gap-2 mt-0.5">
