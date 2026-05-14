@@ -1,0 +1,7 @@
+{
+  "name": "pulse-service",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "cd /home/z/my-project/pulse && npx next dev -p 3001"
+  }
+}

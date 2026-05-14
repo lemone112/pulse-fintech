@@ -1,0 +1,399 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ═══════════════════════════════════════════════════════════════════
+   PULSE DESIGN TOKEN SYSTEM — Tremor-first, shadcn-compatible
+
+   Hierarchy: Templates → Tremor components → Shadcn + Tremor tokens → Shadcn only
+
+   Token layers:
+   1. @theme inline  → TW4 token registry (maps --color-* to CSS vars)
+   2. :root          → Light mode values
+   3. .dark          → Dark mode overrides (perceptual tuning, NOT inversion)
+   ═══════════════════════════════════════════════════════════════════ */
+
+@theme inline {
+  /* ── Fonts ── */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* ── Radius ── */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-tremor-small: 0.25rem;
+  --radius-tremor-default: 0.375rem;
+  --radius-tremor-full: 9999px;
+
+  /* ── Shadcn semantic tokens ── */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* ── Shadcn chart tokens ── */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* ── Sidebar tokens ── */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* ── Pulse status colors (CSS vars for dark mode overrides) ── */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-subtle: var(--success-subtle);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-subtle: var(--info-subtle);
+
+  /* ── Pulse Radix Blue scale (primary-1 → primary-12) ── */
+  --color-primary-1: var(--primary-1);
+  --color-primary-2: var(--primary-2);
+  --color-primary-3: var(--primary-3);
+  --color-primary-4: var(--primary-4);
+  --color-primary-5: var(--primary-5);
+  --color-primary-6: var(--primary-6);
+  --color-primary-7: var(--primary-7);
+  --color-primary-8: var(--primary-8);
+  --color-primary-9: var(--primary-9);
+  --color-primary-10: var(--primary-10);
+  --color-primary-11: var(--primary-11);
+  --color-primary-12: var(--primary-12);
+
+  /* ═══════════════════════════════════════════════════════════════
+     TREMOR TOKENS — Light mode
+     These resolve to light-appropriate values and are used with
+     classes like bg-tremor-brand, text-tremor-content, etc.
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* Brand */
+  --color-tremor-brand: var(--primary);
+  --color-tremor-brand-subtle: var(--primary-3);
+  --color-tremor-brand-muted: var(--primary-2);
+  --color-tremor-brand-inverted: var(--primary-foreground);
+
+  /* Content / text */
+  --color-tremor-content: var(--foreground);
+  --color-tremor-content-emphasis: var(--foreground);
+  --color-tremor-content-subtle: var(--muted-foreground);
+  --color-tremor-content-strong: var(--foreground);
+
+  /* Background surfaces */
+  --color-tremor-background: var(--card);
+  --color-tremor-background-subtle: var(--muted);
+  --color-tremor-background-muted: var(--accent);
+
+  /* Border & ring */
+  --color-tremor-border: var(--border);
+  --color-tremor-ring: var(--ring);
+
+  /* ═══════════════════════════════════════════════════════════════
+     TREMOR TOKENS — Dark mode (fixed dark values)
+     Tremor uses dark:bg-dark-tremor-brand etc. so these tokens
+     always hold the dark-appropriate value.
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* Brand (dark) — brand blue with boosted chroma for dark energy */
+  --color-dark-tremor-brand: oklch(0.60 0.22 260);
+  --color-dark-tremor-brand-subtle: oklch(0.22 0.04 260);
+  --color-dark-tremor-brand-muted: oklch(0.18 0.03 260);
+  --color-dark-tremor-brand-inverted: oklch(0.145 0 0);
+
+  /* Content (dark) — L 88-92 for primary text, L 62-68 for muted */
+  --color-dark-tremor-content: oklch(0.92 0.004 260);
+  --color-dark-tremor-content-emphasis: oklch(0.92 0.004 260);
+  --color-dark-tremor-content-subtle: oklch(0.65 0.01 260);
+  --color-dark-tremor-content-strong: oklch(0.985 0 0);
+
+  /* Background (dark) — L 14-20 surfaces with cool tint */
+  --color-dark-tremor-background: oklch(0.18 0.004 260);
+  --color-dark-tremor-background-subtle: oklch(0.22 0.005 260);
+  --color-dark-tremor-background-muted: oklch(0.26 0.006 260);
+
+  /* Border & ring (dark) — lighter than surface per rim-light rule */
+  --color-dark-tremor-border: oklch(1 0 0 / 10%);
+  --color-dark-tremor-ring: oklch(0.60 0.22 260);
+
+  /* ═══════════════════════════════════════════════════════════════
+     TREMOR SHADOWS
+     ═══════════════════════════════════════════════════════════════ */
+  --shadow-tremor-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-tremor-input: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-tremor-dropdown: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-dark-tremor-card: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-dark-tremor-input: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-dark-tremor-dropdown: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+
+  /* ═══════════════════════════════════════════════════════════════
+     PULSE CHART TOKENS — Semantic, NOT hardcoded hex
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* Semantic chart colors (income/expense/plan/actual/balance) */
+  --color-chart-income: var(--success);
+  --color-chart-expense: var(--danger);
+  --color-chart-plan: var(--primary-9);
+  --color-chart-actual: var(--warning);
+  --color-chart-balance: var(--primary-9);
+
+  /* Multi-color chart palette (donut, pie, multi-series) */
+  --color-chart-palette-1: var(--chart-1);
+  --color-chart-palette-2: var(--chart-2);
+  --color-chart-palette-3: var(--chart-3);
+  --color-chart-palette-4: var(--chart-4);
+  --color-chart-palette-5: var(--chart-5);
+  --color-chart-palette-6: var(--success);
+  --color-chart-palette-7: var(--danger);
+  --color-chart-palette-8: var(--warning);
+  --color-chart-palette-9: var(--info);
+  --color-chart-palette-10: var(--primary-9);
+  --color-chart-palette-11: var(--primary-7);
+  --color-chart-palette-12: var(--primary-5);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LIGHT MODE — :root
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  --radius: 0.625rem;
+
+  /* ── Shadcn semantic values ── */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0.004 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0.004 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0.004 260);
+  --primary: oklch(0.45 0.18 260);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0.004 260);
+  --secondary-foreground: oklch(0.205 0.004 260);
+  --muted: oklch(0.97 0.004 260);
+  --muted-foreground: oklch(0.556 0.01 260);
+  --accent: oklch(0.97 0.004 260);
+  --accent-foreground: oklch(0.205 0.004 260);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0.004 260);
+  --input: oklch(0.922 0.004 260);
+  --ring: oklch(0.45 0.18 260);
+
+  /* ── Shadcn chart values ── */
+  --chart-1: oklch(0.45 0.18 260);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+
+  /* ── Sidebar ── */
+  --sidebar: oklch(0.985 0.004 260);
+  --sidebar-foreground: oklch(0.145 0.004 260);
+  --sidebar-primary: oklch(0.45 0.18 260);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0.004 260);
+  --sidebar-accent-foreground: oklch(0.205 0.004 260);
+  --sidebar-border: oklch(0.922 0.004 260);
+  --sidebar-ring: oklch(0.45 0.18 260);
+
+  /* ── Status colors — Light mode ── */
+  --success: oklch(0.52 0.17 145);
+  --success-foreground: oklch(0.25 0.06 145);
+  --success-subtle: oklch(0.95 0.03 145);
+  --danger: oklch(0.577 0.245 27.325);
+  --danger-foreground: oklch(0.25 0.08 25);
+  --danger-subtle: oklch(0.95 0.03 25);
+  --warning: oklch(0.75 0.183 85);
+  --warning-foreground: oklch(0.30 0.08 85);
+  --warning-subtle: oklch(0.96 0.03 85);
+  --info: oklch(0.55 0.18 260);
+  --info-foreground: oklch(0.25 0.06 260);
+  --info-subtle: oklch(0.95 0.02 260);
+
+  /* ── Radix Blue scale — Light mode ── */
+  --primary-1: oklch(0.99 0.005 260);
+  --primary-2: oklch(0.97 0.012 260);
+  --primary-3: oklch(0.93 0.025 260);
+  --primary-4: oklch(0.89 0.035 260);
+  --primary-5: oklch(0.84 0.045 260);
+  --primary-6: oklch(0.78 0.055 260);
+  --primary-7: oklch(0.72 0.065 260);
+  --primary-8: oklch(0.62 0.09 260);
+  --primary-9: oklch(0.50 0.13 260);
+  --primary-10: oklch(0.44 0.13 260);
+  --primary-11: oklch(0.38 0.12 260);
+  --primary-12: oklch(0.26 0.09 260);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DARK MODE — Perceptual tuning (NOT simple inversion)
+
+   Key principles from design-system/20-dark-mode.md:
+   - Page bg: L 8-12, not pure black
+   - Primary text: L 88-92, not pure white (prevents bloom)
+   - Accents: saturation +5-15% to maintain energy
+   - Borders: lighter than surface (rim light, L +3-5 delta)
+   - Shadows: stay darker-than-surface, alpha ≤ 0.05
+   ═══════════════════════════════════════════════════════════════════ */
+
+.dark {
+  /* ── Shadcn semantic values — Dark ── */
+  --background: oklch(0.145 0.004 260);
+  --foreground: oklch(0.92 0.004 260);
+  --card: oklch(0.18 0.004 260);
+  --card-foreground: oklch(0.92 0.004 260);
+  --popover: oklch(0.18 0.004 260);
+  --popover-foreground: oklch(0.92 0.004 260);
+  --primary: oklch(0.60 0.22 260);
+  --primary-foreground: oklch(0.145 0.004 260);
+  --secondary: oklch(0.269 0.006 260);
+  --secondary-foreground: oklch(0.92 0.004 260);
+  --muted: oklch(0.269 0.006 260);
+  --muted-foreground: oklch(0.65 0.01 260);
+  --accent: oklch(0.269 0.006 260);
+  --accent-foreground: oklch(0.92 0.004 260);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.60 0.22 260);
+
+  /* ── Shadcn chart values — Dark ── */
+  --chart-1: oklch(0.60 0.22 260);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+
+  /* ── Sidebar — Dark ── */
+  --sidebar: oklch(0.18 0.004 260);
+  --sidebar-foreground: oklch(0.92 0.004 260);
+  --sidebar-primary: oklch(0.60 0.22 260);
+  --sidebar-primary-foreground: oklch(0.92 0.004 260);
+  --sidebar-accent: oklch(0.269 0.006 260);
+  --sidebar-accent-foreground: oklch(0.92 0.004 260);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.60 0.22 260);
+
+  /* ── Status colors — Dark mode (perceptual tuning) ──
+     Success: L+6, S+8 → more vibrant green
+     Danger: L stays, S+8 → red already bright, boost saturation
+     Warning: L+4, S+6 → warmer amber
+     Info:   L+6, S+4 → brighter blue
+  */
+  --success: oklch(0.58 0.22 145);
+  --success-foreground: oklch(0.90 0.05 145);
+  --success-subtle: oklch(0.20 0.05 145);
+  --danger: oklch(0.577 0.30 25);
+  --danger-foreground: oklch(0.90 0.05 25);
+  --danger-subtle: oklch(0.20 0.06 25);
+  --warning: oklch(0.79 0.22 85);
+  --warning-foreground: oklch(0.90 0.05 85);
+  --warning-subtle: oklch(0.20 0.05 85);
+  --info: oklch(0.61 0.22 260);
+  --info-foreground: oklch(0.90 0.04 260);
+  --info-subtle: oklch(0.20 0.04 260);
+
+  /* ── Radix Blue scale — Dark mode (inverted lightness) ──
+     Steps 1-3:  Dark backgrounds (low L)
+     Steps 4-6:  Subtle borders / accents
+     Steps 7-9:  Interactive brand elements (boosted for dark energy)
+     Steps 10-12: Light text on dark backgrounds (high L, not pure white)
+  */
+  --primary-1: oklch(0.14 0.015 260);
+  --primary-2: oklch(0.18 0.03 260);
+  --primary-3: oklch(0.22 0.04 260);
+  --primary-4: oklch(0.26 0.05 260);
+  --primary-5: oklch(0.30 0.06 260);
+  --primary-6: oklch(0.36 0.08 260);
+  --primary-7: oklch(0.44 0.10 260);
+  --primary-8: oklch(0.52 0.14 260);
+  --primary-9: oklch(0.55 0.18 260);
+  --primary-10: oklch(0.62 0.15 260);
+  --primary-11: oklch(0.72 0.10 260);
+  --primary-12: oklch(0.85 0.06 260);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BASE LAYER
+   ═══════════════════════════════════════════════════════════════════ */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   UTILITY: Tabular nums for money / financial figures
+   ═══════════════════════════════════════════════════════════════════ */
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   UTILITY: Custom scrollbar
+   ═══════════════════════════════════════════════════════════════════ */
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   A11Y: Reduced motion
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
