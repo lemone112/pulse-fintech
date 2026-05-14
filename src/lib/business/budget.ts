@@ -64,23 +64,30 @@ export async function upsertBudgetItem(params: {
   month: number | null
   amount: number
 }): Promise<unknown> {
-  return db.budgetItem.upsert({
+  // SQLite doesn't handle NULL in composite unique constraints well for upserts.
+  // Use findFirst + create/update pattern instead.
+  const existing = await db.budgetItem.findFirst({
     where: {
-      organizationId_categoryId_year_month: {
-        organizationId: params.organizationId,
-        categoryId: params.categoryId,
-        year: params.year,
-        month: params.month,
-      },
-    },
-    create: {
       organizationId: params.organizationId,
       categoryId: params.categoryId,
       year: params.year,
-      month: params.month,
-      amount: params.amount,
+      month: params.month ?? null,
     },
-    update: {
+  })
+
+  if (existing) {
+    return db.budgetItem.update({
+      where: { id: existing.id },
+      data: { amount: params.amount },
+    })
+  }
+
+  return db.budgetItem.create({
+    data: {
+      organizationId: params.organizationId,
+      categoryId: params.categoryId,
+      year: params.year,
+      month: params.month ?? null,
       amount: params.amount,
     },
   })

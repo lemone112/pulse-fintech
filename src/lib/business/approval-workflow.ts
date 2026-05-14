@@ -158,7 +158,7 @@ export async function actOnStep(input: ActOnStepInput): Promise<ApprovalWithStep
   })
 
   // Determine approval status
-  let approvalStatus: string = 'PENDING'
+  let approvalStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' = 'PENDING'
 
   if (input.action === 'REJECT') {
     // If any step is rejected, the whole approval is rejected

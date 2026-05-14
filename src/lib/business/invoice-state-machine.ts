@@ -5,14 +5,16 @@
 import { db } from '@/lib/db'
 import { logAudit, AuditActions, EntityTypes } from '@/lib/audit'
 
+type InvoiceStatus = 'DRAFT' | 'SENT' | 'PAID' | 'PARTIALLY_PAID' | 'OVERDUE' | 'CANCELLED'
+
 // Valid state transitions for Invoice
-const VALID_TRANSITIONS: Record<string, string[]> = {
+const VALID_TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
   DRAFT: ['SENT', 'CANCELLED'],
   SENT: ['PAID', 'PARTIALLY_PAID', 'OVERDUE', 'CANCELLED'],
   PARTIALLY_PAID: ['PAID', 'OVERDUE', 'CANCELLED'],
   OVERDUE: ['PAID', 'PARTIALLY_PAID', 'CANCELLED'],
-  PAID: [],          // Terminal state
-  CANCELLED: [],     // Terminal state (can be reopened to DRAFT only via admin action)
+  PAID: [],
+  CANCELLED: [],
 }
 
 // Amount threshold above which transitions require approval
@@ -22,8 +24,8 @@ const APPROVAL_THRESHOLD = 100000 // 100 000 ₽
  * Check if a transition from currentStatus to targetStatus is valid.
  */
 export function canTransition(
-  currentStatus: string,
-  targetStatus: string
+  currentStatus: InvoiceStatus,
+  targetStatus: InvoiceStatus
 ): boolean {
   const allowed = VALID_TRANSITIONS[currentStatus]
   if (!allowed) return false
@@ -33,14 +35,14 @@ export function canTransition(
 /**
  * Get all valid target statuses from the current status.
  */
-export function getValidTransitions(currentStatus: string): string[] {
+export function getValidTransitions(currentStatus: InvoiceStatus): InvoiceStatus[] {
   return VALID_TRANSITIONS[currentStatus] || []
 }
 
 /**
  * Check if a transition requires approval (based on invoice amount).
  */
-export function requiresApproval(currentStatus: string, targetStatus: string, amount: number): boolean {
+export function requiresApproval(currentStatus: InvoiceStatus, targetStatus: InvoiceStatus, amount: number): boolean {
   // Approval is required for high-value invoices when moving to paid/cancelled
   if (amount > APPROVAL_THRESHOLD) {
     const approvalRequiredTransitions = ['PAID', 'CANCELLED']
@@ -57,7 +59,7 @@ export function requiresApproval(currentStatus: string, targetStatus: string, am
  */
 export async function transition(
   invoiceId: string,
-  targetStatus: string,
+  targetStatus: InvoiceStatus,
   userId: string,
   reason?: string
 ): Promise<unknown> {

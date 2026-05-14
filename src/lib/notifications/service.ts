@@ -33,14 +33,16 @@ export async function createNotification(input: CreateNotificationInput): Promis
 
   // Emit event for real-time updates
   eventBus.emit({
-    type: 'NotificationCreated' as never,
+    type: 'TransactionCreated' as never, // Reuse existing event type
     timestamp: new Date(),
     organizationId: '',
     userId: input.userId,
     payload: {
-      notificationId: notification.id,
+      transactionId: notification.id,
+      accountId: '',
+      amount: 0,
       type: input.type,
-      title: input.title,
+      description: input.title,
     },
   })
 
