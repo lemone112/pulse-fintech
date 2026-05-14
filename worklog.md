@@ -537,3 +537,83 @@ All 7 tests passing:
 5. ✅ Offline/online cycle simulation
 6. ✅ Large batch edits (10 nodes × 100 edits = 1ms)
 7. ✅ Field conflict resolution (deterministic)
+
+## Phase 7: Skeletons, Error Boundaries, Keyboard Shortcuts (Task 11-a)
+
+**Date**: 2026-05-15
+**Commit**: `014ebf4`
+
+### Changes Made
+
+| Step | Description | Status |
+|------|-------------|--------|
+| 91 | Skeleton loading — shimmer CSS in globals.css, page/kpi/table/chart skeleton components | ✅ Done |
+| 92 | Error boundaries — ErrorBoundary class + dashboard/root error.tsx + not-found.tsx | ✅ Done |
+| 93 | Keyboard shortcuts — useKeyboardShortcuts hook with Cmd+N, Cmd+Shift+N, Cmd+/, Esc | ✅ Done |
+
+### Step 91: Skeleton Loading
+
+1. **Moved shimmer animation to `globals.css`** — Replaced the inline `<ShimmerStyle>` component (injected via `dangerouslySetInnerHTML`) with proper CSS classes in `globals.css`. Both `.skeleton-shimmer` (spec-compliant) and `.pulse-shimmer` (backward compat) are defined with `@keyframes shimmer`.
+
+2. **Updated all skeleton components** to use `.skeleton-shimmer` class from globals.css instead of `.pulse-shimmer` + inline `<ShimmerStyle />`. Removed the `ShimmerStyle` component entirely.
+
+3. **Fixed `TableSkeleton`** — Replaced `Math.random()` width with deterministic formula `(rowIdx * 7 + colIdx * 13) % 10 * 4 + 40` to avoid hydration mismatches.
+
+### Step 92: Error Boundaries
+
+1. **`ErrorBoundary` class component** — React error boundary with Tremor `Card` + `Callout` (rose color), friendly Russian message "Что-то пошло не так", "Попробовать снова" + "Обновить страницу" buttons, collapsible error details.
+
+2. **`(dashboard)/error.tsx`** — Next.js error boundary for dashboard routes with Tremor `Callout` styling.
+
+3. **`(dashboard)/not-found.tsx`** — 404 page: "Страница не найдена" in Tremor `Callout`, "404" illustration, link to `/dashboard`.
+
+4. **`app/error.tsx`** — Root error boundary with own `<html>`/`<body>` tags, "Критическая ошибка" message.
+
+5. **Fixed pre-existing SSG build error** — Added `export const dynamic = 'force-dynamic'` to root layout. Tremor `icon` props (Lucide functions) are non-serializable during static page generation, causing "Functions cannot be passed directly to Client Components" during `next build`.
+
+### Step 93: Keyboard Shortcuts
+
+1. **`useKeyboardShortcuts` hook** — Global shortcut handler with `Partial<ShortcutHandlers>` (all handlers optional).
+
+2. **Shortcuts**: Cmd+K (palette), Cmd+N (new transaction), Cmd+Shift+N (new invoice), Cmd+/ (search), Cmd+1-9 (navigate), Escape (close modals).
+
+3. **`SHORTCUT_EVENTS` constants** — Exported event names for consistent usage: `pulse:open-command-palette`, `pulse:new-transaction`, `pulse:new-invoice`, `pulse:focus-search`, `pulse:close-modals`.
+
+4. **Custom events as fallback** — When no handler provided for `onNewTransaction`/`onNewInvoice`/`onEscape`, dispatches custom events so any component can listen.
+
+5. **`useRef` + `useEffect` pattern** — Avoids stale closures while satisfying `react-hooks/refs` lint rule.
+
+6. **Wired in dashboard layout** — Updated layout to use `SHORTCUT_EVENTS` constants.
+
+### Key Decisions
+
+1. **Shimmer CSS in globals.css** — More performant than inline `<style>` injection (parsed once, not per-render). Both `.skeleton-shimmer` and `.pulse-shimmer` defined for compat.
+
+2. **`oklch(from var(--muted-foreground) l c h / 10%)` for shimmer mid-tone** — The spec used `var(--muted-foreground)/10` which is invalid CSS. Used relative color syntax to extract L/C/H at 10% opacity.
+
+3. **Deterministic table skeleton widths** — `Math.random()` causes hydration mismatches; replaced with `(rowIdx * 7 + colIdx * 13) % 10 * 4 + 40`.
+
+4. **`force-dynamic` in root layout** — Pre-existing build failure from Tremor `icon` props (Lucide icon functions) being non-serializable during SSG. Appropriate for a fintech dashboard where all pages are authenticated.
+
+5. **`Cmd+Shift+N` for new invoice** — Matches industry conventions (Xero, QuickBooks). Previous `Cmd+T` conflicted with browser "new tab" shortcut.
+
+6. **`useRef` + `useEffect` for handler sync** — `react-hooks/refs` rule prohibits ref updates during render. `useEffect` with no deps syncs the ref without lint errors.
+
+### Files Created (8)
+
+- `src/components/pulse/skeleton/kpi-skeleton.tsx` — KpiSkeleton + KpiGridSkeleton
+- `src/components/pulse/skeleton/chart-skeleton.tsx` — ChartSkeleton + ChartRowSkeleton
+- `src/components/pulse/skeleton/table-skeleton.tsx` — TableSkeleton with deterministic widths
+- `src/components/pulse/skeleton/page-skeleton.tsx` — Dashboard/Transactions/Generic page skeletons
+- `src/components/pulse/skeleton/index.ts` — Barrel exports
+- `src/components/pulse/error-boundary.tsx` — ErrorBoundary class + ErrorFallback
+- `src/app/(dashboard)/error.tsx` — Dashboard route error boundary
+- `src/app/(dashboard)/not-found.tsx` — Dashboard 404 page
+- `src/app/error.tsx` — Root error boundary
+- `src/hooks/use-keyboard-shortcuts.ts` — Hook + types + SHORTCUT_EVENTS
+
+### Files Modified (3)
+
+- `src/app/globals.css` — Added `@keyframes shimmer`, `.skeleton-shimmer`, `.pulse-shimmer`
+- `src/app/layout.tsx` — Added `export const dynamic = 'force-dynamic'`
+- `src/app/(dashboard)/layout.tsx` — Wired keyboard shortcuts with SHORTCUT_EVENTS
