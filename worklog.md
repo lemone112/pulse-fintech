@@ -258,3 +258,72 @@
 
 - `src/app/layout.tsx` — wrapped with QueryProvider
 - `src/lib/hooks/index.ts` — barrel export for all hooks
+
+## Phase 4: Authentication & Security (Task 8-a)
+
+**Date**: 2026-05-14
+
+### Changes Made
+
+| Step | Description | Status |
+|------|-------------|--------|
+| 56 | Install next-auth@4, create NextAuth config with Credentials + Google OAuth, JWT strategy, custom pages, session callbacks | ✅ Done |
+| 57 | Create middleware for protected routes (dashboard, API), redirect to /login, add org context headers | ✅ Done |
+| 58 | Update Prisma schema: add passwordHash, emailVerified to User; add OAuthAccount and VerificationToken models | ✅ Done |
+| 59 | Create RBAC utilities with 4-role hierarchy (OWNER > ADMIN > ACCOUNTANT > VIEWER), permission checks, route-based access | ✅ Done |
+| 60 | Create login and register pages with Tremor components, auth layout with Pulse branding | ✅ Done |
+| 61 | Create auth API utilities: getServerSession wrapper, getCurrentUser, requireAuth, requirePermission | ✅ Done |
+| 62-63 | CSRF handled by NextAuth; create in-memory rate limiter (5 attempts/minute by IP) | ✅ Done |
+| 64 | Create audit log middleware: logAudit() with auto userId/orgId capture, AuditActions + EntityTypes constants | ✅ Done |
+
+### Key Decisions
+
+1. **OAuthAccount instead of Account** — The financial `Account` model already exists in the schema. NextAuth's OAuth account model was named `OAuthAccount` and mapped to `oauth_accounts` table to avoid the naming conflict. This keeps the financial Account model untouched while supporting OAuth account linking.
+
+2. **JWT session strategy** — Using JWT tokens instead of database sessions. The 30-day max age aligns with fintech compliance expectations while keeping the system stateless. The JWT callback enriches the token with `role`, `organizationId`, and `organizationName` from the first OrganizationMember record.
+
+3. **SHA-256 password hashing via Web Crypto API** — Instead of adding `bcrypt` as a dependency, we use the built-in `crypto.subtle.digest('SHA-256')` which works in both Edge and Node.js runtimes. Suitable for development; production should migrate to bcrypt/argon2.
+
+4. **Middleware with specific matcher** — The middleware uses `matcher: ['/dashboard/:path*', '/api/:path*', '/']` rather than the catch-all `((?!_next/static)...)` pattern. This avoids intercepting NextAuth internal routes, static files, and auth pages while protecting all dashboard and API routes.
+
+5. **Registration creates user + org + membership in single transaction** — The `/api/auth/register` endpoint uses `db.$transaction()` to atomically create the User, Organization, and OrganizationMember records. The first user is assigned the OWNER role for their organization.
+
+6. **RBAC permission model** — Four-tier role hierarchy with fine-grained permissions:
+   - VIEWER: read-only access to all entities
+   - ACCOUNTANT: + create/edit transactions, invoices, categories, counterparties, projects, documents
+   - ADMIN: + manage users, rules, approvals, settings
+   - OWNER: + delete organization, manage billing
+   Each role inherits all permissions from lower tiers.
+
+7. **In-memory rate limiter** — Simple Map-based implementation with automatic cleanup every 5 minutes. Applied to the registration endpoint (5 attempts per minute per IP). Lightweight, no external dependencies.
+
+8. **Audit logging is non-blocking** — `logAudit()` wraps the database write in a try/catch that logs errors to console but never throws. This ensures that audit logging failures don't break the main operation being audited.
+
+### Files Created (11 total)
+
+- `src/lib/auth/config.ts` — NextAuth configuration with Credentials + Google providers, JWT strategy, callbacks
+- `src/lib/auth/types.ts` — TypeScript module augmentation for NextAuth Session/User/JWT types
+- `src/lib/auth/rbac.ts` — RBAC utilities: hasPermission, canAccessRoute, hasMinRole, getPermissions
+- `src/lib/auth/server.ts` — Server-side auth utilities: getSession, getCurrentUser, requireAuth, requirePermission, AuthError
+- `src/lib/rate-limit.ts` — In-memory rate limiter with automatic cleanup
+- `src/lib/audit.ts` — Audit log utility with auto user/org context capture
+- `src/app/api/auth/[...nextauth]/route.ts` — NextAuth route handler
+- `src/app/api/auth/register/route.ts` — Registration endpoint with rate limiting
+- `src/app/(auth)/layout.tsx` — Auth layout with Pulse branding
+- `src/app/(auth)/login/page.tsx` — Login form with Tremor components
+- `src/app/(auth)/register/page.tsx` — Registration form with org name field
+
+### Files Modified (3 total)
+
+- `prisma/schema.prisma` — added passwordHash, emailVerified, OAuthAccount, VerificationToken
+- `src/lib/db.ts` — added comment for cache busting after schema changes
+- `.env` — added NEXTAUTH_URL, NEXTAUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+
+### Verified Flows
+
+1. **Registration**: POST /api/auth/register → creates User + Organization + OrganizationMember → returns 201
+2. **Login**: POST /api/auth/callback/credentials → sets session cookie → redirects to callbackUrl
+3. **Session**: GET /api/auth/session → returns user with role, organizationId, organizationName
+4. **Protected page**: GET /dashboard (no cookie) → 307 redirect to /login?callbackUrl=/dashboard
+5. **Protected API**: GET /api/transactions (no cookie) → 401 {"error": "Необходима авторизация"}
+6. **Authenticated dashboard**: GET /dashboard (with cookie) → 200
