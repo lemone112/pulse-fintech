@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { BarChart, AreaChart, Card, Title, Text, Grid, Flex, List, ListItem } from '@tremor/react'
+import { BarChart, AreaChart, Card, Title, Subtitle, Text, Bold, Grid, Flex, List, ListItem, Badge } from '@tremor/react'
 import { KPIGrid } from '@/components/pulse/overview/kpi-card'
 import { formatCompact } from '@/lib/utils'
 
@@ -36,10 +36,10 @@ export default function DashboardPage() {
       animate="show"
       className="p-6 space-y-6"
     >
-      <div>
+      <Flex flexDirection="col">
         <Title>Обзор</Title>
-        <Text className="text-tremor-content-subtle mt-1">Финансовая сводка за текущий период</Text>
-      </div>
+        <Subtitle>Финансовая сводка за текущий период</Subtitle>
+      </Flex>
 
       <KPIGrid />
 
@@ -52,21 +52,20 @@ export default function DashboardPage() {
           transition={{ delay: 0.3 }}
         >
           <Card>
-            <div className="p-5">
-              <Text className="text-tremor-content-subtle mb-4">Доходы vs Расходы</Text>
-              <BarChart
-                data={cashflowData}
-                index="month"
-                categories={['income', 'expense']}
-                colors={['emerald', 'red']}
-                valueFormatter={formatCompact}
-                showGridLines={true}
-                showAnimation={true}
-                showLegend={true}
-                showTooltip={true}
-                yAxisWidth={60}
-              />
-            </div>
+            <Title className="text-tremor-content-subtle text-sm font-medium">Доходы vs Расходы</Title>
+            <BarChart
+              className="mt-4"
+              data={cashflowData}
+              index="month"
+              categories={['income', 'expense']}
+              colors={['emerald', 'red']}
+              valueFormatter={formatCompact}
+              showGridLines={true}
+              showAnimation={true}
+              showLegend={true}
+              showTooltip={true}
+              yAxisWidth={60}
+            />
           </Card>
         </motion.div>
 
@@ -77,21 +76,20 @@ export default function DashboardPage() {
           transition={{ delay: 0.4 }}
         >
           <Card>
-            <div className="p-5">
-              <Text className="text-tremor-content-subtle mb-4">Динамика баланса</Text>
-              <AreaChart
-                data={balanceData}
-                index="month"
-                categories={['balance']}
-                colors={['blue']}
-                valueFormatter={formatCompact}
-                showGridLines={true}
-                showAnimation={true}
-                showLegend={true}
-                showTooltip={true}
-                yAxisWidth={60}
-              />
-            </div>
+            <Title className="text-tremor-content-subtle text-sm font-medium">Динамика баланса</Title>
+            <AreaChart
+              className="mt-4"
+              data={balanceData}
+              index="month"
+              categories={['balance']}
+              colors={['blue']}
+              valueFormatter={formatCompact}
+              showGridLines={true}
+              showAnimation={true}
+              showLegend={true}
+              showTooltip={true}
+              yAxisWidth={60}
+            />
           </Card>
         </motion.div>
       </Grid>
@@ -103,7 +101,7 @@ export default function DashboardPage() {
         transition={{ delay: 0.5 }}
       >
         <Card>
-          <Text className="text-tremor-content-subtle mb-4">Последние операции</Text>
+          <Title className="text-tremor-content-subtle text-sm font-medium mb-4">Последние операции</Title>
           <List>
             {[
               { name: 'ООО «Альфа»', desc: 'Оплата по счёту #1245', amount: '+₽ 350 000', date: 'Сегодня', direction: 'in' },
@@ -115,20 +113,22 @@ export default function DashboardPage() {
               <ListItem key={i}>
                 <Flex justifyContent="between" alignItems="center">
                   <Flex alignItems="center" className="space-x-3">
-                    <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium ${tx.direction === 'in' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
+                    <Badge size="xs" color={tx.direction === 'in' ? 'emerald' : 'red'}>
                       {tx.direction === 'in' ? '↓' : '↑'}
-                    </div>
-                    <div>
-                      <Text className="text-tremor-content">{tx.name}</Text>
+                    </Badge>
+                    <Flex flexDirection="col">
+                      <Text className="text-tremor-content">
+                        <Bold>{tx.name}</Bold>
+                      </Text>
                       <Text className="text-tremor-content-subtle text-xs">{tx.desc}</Text>
-                    </div>
+                    </Flex>
                   </Flex>
-                  <div className="text-right">
+                  <Flex flexDirection="col" alignItems="end">
                     <Text className={`text-sm tabular-nums font-medium ${tx.direction === 'in' ? 'text-success' : 'text-danger'}`}>
                       {tx.amount}
                     </Text>
                     <Text className="text-tremor-content-subtle text-xs">{tx.date}</Text>
-                  </div>
+                  </Flex>
                 </Flex>
               </ListItem>
             ))}

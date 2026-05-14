@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, type Variants } from 'framer-motion'
-import { Card, Metric, BadgeDelta, DeltaType, Flex, Text, Grid } from '@tremor/react'
+import { Card, Metric, BadgeDelta, DeltaType, Flex, Text, Bold, Grid } from '@tremor/react'
 import { cn } from '@/lib/utils'
 
 const cardVariants: Variants = {
@@ -55,7 +55,12 @@ export function KpiCard({
       className={className}
     >
       <Card className="h-full">
-        <Text className="text-xs font-medium uppercase tracking-wider text-tremor-content-subtle">{title}</Text>
+        <Flex justifyContent="between" alignItems="center">
+          <Text className="text-xs font-medium uppercase tracking-wider text-tremor-content-subtle">{title}</Text>
+          {delta !== undefined && (
+            <BadgeDelta deltaType={deltaType} size="xs" />
+          )}
+        </Flex>
 
         <Flex alignItems="baseline" className="mt-2 gap-2">
           {prefix && (
@@ -66,7 +71,9 @@ export function KpiCard({
             initial="hidden"
             animate="visible"
           >
-            <Metric>{value}</Metric>
+            <Metric className="text-2xl">
+              <Bold>{value}</Bold>
+            </Metric>
           </motion.span>
           {suffix && (
             <Text className="text-sm text-tremor-content-subtle">{suffix}</Text>
@@ -75,8 +82,7 @@ export function KpiCard({
 
         {delta !== undefined && (
           <Flex alignItems="center" className="mt-2 gap-1.5">
-            <BadgeDelta deltaType={deltaType} size="xs" />
-            <span
+            <Text
               className={cn(
                 'text-xs tabular-nums font-medium',
                 deltaType === 'increase' && 'text-success',
@@ -86,7 +92,7 @@ export function KpiCard({
             >
               {delta > 0 && '+'}
               {delta.toFixed(1)}%
-            </span>
+            </Text>
             <Text className="text-xs text-tremor-content-subtle">
               vs прошлый период
             </Text>
