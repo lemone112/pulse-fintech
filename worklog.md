@@ -1,50 +1,48 @@
 # PULSE Fintech — Worklog
 
-## Phase 1: Project Cleanup (Task 5-a)
+## Phase 1: Code Quality (Task 5-b)
 
-**Date:** 2025-07-09
-**Branch:** main
-**Commit:** `2639b96` — `chore: Phase 1 cleanup — remove dead files, unused components, unused packages`
+**Date**: 2026-05-14
+**Commit**: `1e2bc0c`
 
-### What was done
+### Changes Made
 
-| Step | Action | Details |
-|------|--------|---------|
-| 1 | Delete dead `tailwind.config.ts` | TW3 config; project uses TW4 via `globals.css` |
-| 2 | Delete 45 unused shadcn/ui components | Kept only: `button`, `command`, `dropdown-menu`, `dialog`, `toast` (5 components with real external imports) |
-| 3 | Delete `mini-services/` | Dead directory pointing to non-existent service |
-| 4 | Delete `pulse/` | Contained `.next` build artefacts and dead config |
-| 5 | Delete `examples/` | Unused websocket examples |
-| 6 | Delete `.zscripts/` | Dead build/dev helper scripts |
-| 7 | Remove 13 unused npm packages | `@mdxeditor/editor`, `@reactuses/core`, `react-syntax-highlighter`, `next-intl`, `uuid`, `sharp`, `next-auth`, `tailwindcss-animate`, `embla-carousel-react`, `input-otp`, `vaul`, `react-resizable-panels`, `react-day-picker` + 24 unused `@radix-ui/*` packages |
-| 8 | Rename package | `nextjs_tailwind_shadcn_ts` → `pulse-fintech` |
-| 9 | Update `.gitignore` | Added project-specific ignores: `/pulse/`, `/agent-ctx/`, `/examples/`, `/mini-services/`, `/.zscripts/`, `/skills/`, `/download/`, `/db/*.db`, `db/*.db-journal` |
-| 10 | Create `.env.example` | Template with Database, AI Gateway, MCP Endpoints, API sections |
+| Step | Description | Status |
+|------|-------------|--------|
+| 15 | Replace 9+ duplicate `rub()`/`moneyFormatter()` with unified `formatMoney`/`formatCompact`/`formatNumber` from `@/lib/utils` | ✅ Done |
+| 16 | Replace 16 hardcoded hex colors in `categories/page.tsx` with `bg-chart-palette-N` Tailwind classes | ✅ Done |
+| 17 | Consolidate `statusToTremorColor()` into `documents/constants.ts` | ✅ Done |
+| 18 | Remove `ignoreBuildErrors` from `next.config.ts` | ✅ Done |
+| 24 | Wire command palette items to actual navigation via `router.push()` | ✅ Done |
+| 25 | Dark mode subtle color overrides — already present in `globals.css` | ✅ Verified |
 
-### Kept UI Components (5)
+### Key Decisions
 
-| Component | External Imports |
-|-----------|-----------------|
-| `button` | 3 (chart-card, chat-panel, document-card) |
-| `command` | 1 (command-palette) |
-| `dropdown-menu` | 3 (chart-card, chat-panel, document-card) |
-| `dialog` | 1 (command — dependency) |
-| `toast` | 1 (use-toast hook) |
+1. **Added `formatNumber()`** to `currency.ts` — the trial-balance and balance-sheet pages need plain number formatting (no ₽ symbol), so a new formatter was required beyond the existing `formatMoney` and `formatCompact`.
 
-### Deleted UI Components (45)
+2. **`formatSigned()`** used for counterparties — the inline `Intl.NumberFormat` with manual "+" prefix maps perfectly to `formatSigned()`.
 
-accordion, alert-dialog, alert, aspect-ratio, avatar, badge, breadcrumb, calendar, card, carousel, chart, checkbox, collapsible, context-menu, dialog (unused instance — kept one), drawer, form, hover-card, input-otp, input, label, menubar, navigation-menu, pagination, popover, progress, radio-group, resizable, scroll-area, select, separator, sheet, sidebar, skeleton, slider, sonner, switch, table, tabs, textarea, toggle-group, toggle, tooltip, toaster
+3. **Chart-palette CSS variable classes** (`bg-chart-palette-1` through `bg-chart-palette-12`) for category colors instead of hardcoded hex — provides automatic dark mode support and design system consistency.
 
-### Package Reduction
+4. **Command palette routes** use query params for action items (`?new=1`) since there are no dedicated creation pages yet.
 
-- **Before:** 67 dependencies, 8 devDependencies
-- **After:** 31 dependencies, 8 devDependencies
-- **Removed:** 36 packages from `node_modules` (including transitive deps)
-- **Estimated space saved:** ~50+ MB
+### Files Modified (13 total)
 
-### Verification
-
-- ✅ `bun install` — clean, 36 packages removed
-- ✅ `bun run lint` — no errors
-- ✅ Dev server running without issues
-- ✅ `git push origin main` — pushed successfully
+- `src/lib/format/currency.ts` — added `formatNumber()`
+- `src/lib/utils.ts` — re-export `formatNumber`
+- `src/app/(dashboard)/dashboard/page.tsx`
+- `src/app/(dashboard)/transactions/page.tsx`
+- `src/app/(dashboard)/invoices/page.tsx`
+- `src/app/(dashboard)/projects/page.tsx`
+- `src/app/(dashboard)/categories/page.tsx`
+- `src/app/(dashboard)/counterparties/page.tsx`
+- `src/app/(dashboard)/rules/page.tsx`
+- `src/app/(dashboard)/planning/calendar/page.tsx`
+- `src/app/(dashboard)/reports/pnl/page.tsx`
+- `src/app/(dashboard)/reports/cashflow/page.tsx`
+- `src/app/(dashboard)/reports/trial-balance/page.tsx`
+- `src/app/(dashboard)/reports/balance-sheet/page.tsx`
+- `src/components/pulse/documents/constants.ts`
+- `src/components/pulse/documents/document-card.tsx`
+- `src/components/pulse/command-palette.tsx`
+- `next.config.ts`
