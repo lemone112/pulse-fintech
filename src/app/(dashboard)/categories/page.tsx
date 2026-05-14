@@ -18,43 +18,40 @@ import {
   TabPanel,
 } from '@tremor/react'
 import { Tag, Plus, TrendingUp, TrendingDown } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatMoney } from '@/lib/utils'
 
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
 }
 
-const rub = (v: number) =>
-  new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(v)
-
 interface CategoryItem {
   id: string
   name: string
   count: number
   total: number
-  color: string
+  colorClass: string
 }
 
 const incomeCategories: CategoryItem[] = [
-  { id: 'i1', name: 'Выручка', count: 84, total: 12_450_000, color: '#10b981' },
-  { id: 'i2', name: 'Консультации', count: 12, total: 1_200_000, color: '#3b82f6' },
-  { id: 'i3', name: 'Проектные доходы', count: 6, total: 2_800_000, color: '#8b5cf6' },
-  { id: 'i4', name: 'Проценты', count: 3, total: 35_000, color: '#f59e0b' },
-  { id: 'i5', name: 'Прочие доходы', count: 2, total: 15_000, color: '#6b7280' },
+  { id: 'i1', name: 'Выручка', count: 84, total: 12_450_000, colorClass: 'bg-chart-palette-6' },
+  { id: 'i2', name: 'Консультации', count: 12, total: 1_200_000, colorClass: 'bg-chart-palette-1' },
+  { id: 'i3', name: 'Проектные доходы', count: 6, total: 2_800_000, colorClass: 'bg-chart-palette-3' },
+  { id: 'i4', name: 'Проценты', count: 3, total: 35_000, colorClass: 'bg-chart-palette-8' },
+  { id: 'i5', name: 'Прочие доходы', count: 2, total: 15_000, colorClass: 'bg-chart-palette-5' },
 ]
 
 const expenseCategories: CategoryItem[] = [
-  { id: 'e1', name: 'Зарплаты', count: 24, total: 2_100_000, color: '#ef4444' },
-  { id: 'e2', name: 'Аренда', count: 3, total: 450_000, color: '#f97316' },
-  { id: 'e3', name: 'Маркетинг', count: 8, total: 380_000, color: '#eab308' },
-  { id: 'e4', name: 'Подписки', count: 6, total: 120_000, color: '#22c55e' },
-  { id: 'e5', name: 'Логистика', count: 11, total: 290_000, color: '#06b6d4' },
-  { id: 'e6', name: 'Канцтовары', count: 4, total: 18_000, color: '#6366f1' },
-  { id: 'e7', name: 'Связь', count: 3, total: 24_000, color: '#a855f7' },
-  { id: 'e8', name: 'Страхование', count: 2, total: 85_000, color: '#ec4899' },
-  { id: 'e9', name: 'Обучение', count: 2, total: 45_000, color: '#14b8a6' },
-  { id: 'e10', name: 'Прочее', count: 7, total: 85_000, color: '#6b7280' },
+  { id: 'e1', name: 'Зарплаты', count: 24, total: 2_100_000, colorClass: 'bg-chart-palette-7' },
+  { id: 'e2', name: 'Аренда', count: 3, total: 450_000, colorClass: 'bg-chart-palette-10' },
+  { id: 'e3', name: 'Маркетинг', count: 8, total: 380_000, colorClass: 'bg-chart-palette-8' },
+  { id: 'e4', name: 'Подписки', count: 6, total: 120_000, colorClass: 'bg-chart-palette-6' },
+  { id: 'e5', name: 'Логистика', count: 11, total: 290_000, colorClass: 'bg-chart-palette-2' },
+  { id: 'e6', name: 'Канцтовары', count: 4, total: 18_000, colorClass: 'bg-chart-palette-11' },
+  { id: 'e7', name: 'Связь', count: 3, total: 24_000, colorClass: 'bg-chart-palette-3' },
+  { id: 'e8', name: 'Страхование', count: 2, total: 85_000, colorClass: 'bg-chart-palette-4' },
+  { id: 'e9', name: 'Обучение', count: 2, total: 45_000, colorClass: 'bg-chart-palette-9' },
+  { id: 'e10', name: 'Прочее', count: 7, total: 85_000, colorClass: 'bg-chart-palette-5' },
 ]
 
 const totalIncome = incomeCategories.reduce((s, c) => s + c.total, 0)
@@ -78,7 +75,7 @@ export default function CategoriesPage() {
             <TrendingUp className="h-4 w-4 text-emerald-500" />
             <Text className="text-tremor-content-subtle">Доходы</Text>
           </Flex>
-          <Metric className="text-success">{rub(totalIncome)}</Metric>
+          <Metric className="text-success">{formatMoney(totalIncome)}</Metric>
           <Text className="text-tremor-content-subtle text-xs mt-1">{incomeCategories.length} категорий</Text>
         </Card>
         <Card className="flex-1">
@@ -86,7 +83,7 @@ export default function CategoriesPage() {
             <TrendingDown className="h-4 w-4 text-red-500" />
             <Text className="text-tremor-content-subtle">Расходы</Text>
           </Flex>
-          <Metric className="text-danger">{rub(totalExpense)}</Metric>
+          <Metric className="text-danger">{formatMoney(totalExpense)}</Metric>
           <Text className="text-tremor-content-subtle text-xs mt-1">{expenseCategories.length} категорий</Text>
         </Card>
       </Flex>
@@ -140,8 +137,7 @@ function CategoryRow({ category }: { category: CategoryItem }) {
       <Flex alignItems="center" justifyContent="between">
         <Flex alignItems="center" className="gap-3">
           <div
-            className="h-3 w-3 rounded-full shrink-0"
-            style={{ backgroundColor: category.color }}
+            className={cn('h-3 w-3 rounded-full shrink-0', category.colorClass)}
             aria-hidden
           />
           <Text className="text-tremor-content font-medium">{category.name}</Text>
@@ -151,7 +147,7 @@ function CategoryRow({ category }: { category: CategoryItem }) {
             {category.count} оп.
           </Badge>
           <Text className="text-tremor-content tabular-nums font-medium w-36 text-right">
-            {rub(category.total)}
+            {formatMoney(category.total)}
           </Text>
         </Flex>
       </Flex>

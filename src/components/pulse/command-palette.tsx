@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Command,
@@ -25,6 +26,13 @@ export function CommandMenuTrigger({ onSelect }: { onSelect: () => void }) {
 }
 
 export function CommandMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const router = useRouter()
+
+  const navigate = (path: string) => {
+    router.push(path)
+    onClose()
+  }
+
   return (
     <AnimatePresence>
       {open && (
@@ -51,18 +59,18 @@ export function CommandMenu({ open, onClose }: { open: boolean; onClose: () => v
                 <CommandEmpty>Ничего не найдено</CommandEmpty>
 
                 <CommandGroup heading="Навигация">
-                  <CommandItem>📊 Аналитика</CommandItem>
-                  <CommandItem>💳 Транзакции</CommandItem>
-                  <CommandItem>📄 Документы</CommandItem>
-                  <CommandItem>🤖 AI Ассистент</CommandItem>
+                  <CommandItem onSelect={() => navigate('/dashboard')}>📊 Аналитика</CommandItem>
+                  <CommandItem onSelect={() => navigate('/transactions')}>💳 Транзакции</CommandItem>
+                  <CommandItem onSelect={() => navigate('/invoices')}>📄 Счета</CommandItem>
+                  <CommandItem onSelect={() => navigate('/reports/pnl')}>📈 Отчёты</CommandItem>
                 </CommandGroup>
 
                 <CommandSeparator />
 
                 <CommandGroup heading="Действия">
-                  <CommandItem>➕ Новая транзакция</CommandItem>
-                  <CommandItem>📤 Экспорт отчёта</CommandItem>
-                  <CommandItem>⚙️ Настройки</CommandItem>
+                  <CommandItem onSelect={() => navigate('/invoices?new=1')}>➕ Новый счёт</CommandItem>
+                  <CommandItem onSelect={() => navigate('/transactions?new=1')}>➕ Новая транзакция</CommandItem>
+                  <CommandItem onSelect={() => navigate('/settings')}>⚙️ Настройки</CommandItem>
                 </CommandGroup>
               </CommandList>
             </Command>

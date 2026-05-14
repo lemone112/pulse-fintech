@@ -17,18 +17,12 @@ import {
   Grid,
 } from '@tremor/react'
 import { BookOpen, CheckCircle } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatMoney, formatNumber } from '@/lib/utils'
 
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
 }
-
-const rub = (v: number) =>
-  new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(v)
-
-const num = (v: number) =>
-  new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(v)
 
 interface TrialRow {
   account: string
@@ -111,7 +105,7 @@ export default function TrialBalancePage() {
           <Flex alignItems="center" className="gap-2">
             <Text className="text-tremor-content-subtle">Обороты за период</Text>
           </Flex>
-          <Metric>{rub(totals.debitTurn)}</Metric>
+          <Metric>{formatMoney(totals.debitTurn)}</Metric>
         </Card>
       </Grid>
 
@@ -142,22 +136,22 @@ export default function TrialBalancePage() {
                     <Text className="text-tremor-content">{row.name}</Text>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Text className="text-tremor-content tabular-nums">{row.debitOpen ? num(row.debitOpen) : '—'}</Text>
+                    <Text className="text-tremor-content tabular-nums">{row.debitOpen ? formatNumber(row.debitOpen) : '—'}</Text>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Text className="text-tremor-content tabular-nums">{row.creditOpen ? num(row.creditOpen) : '—'}</Text>
+                    <Text className="text-tremor-content tabular-nums">{row.creditOpen ? formatNumber(row.creditOpen) : '—'}</Text>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Text className="text-tremor-content tabular-nums">{row.debitTurn ? num(row.debitTurn) : '—'}</Text>
+                    <Text className="text-tremor-content tabular-nums">{row.debitTurn ? formatNumber(row.debitTurn) : '—'}</Text>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Text className="text-tremor-content tabular-nums">{row.creditTurn ? num(row.creditTurn) : '—'}</Text>
+                    <Text className="text-tremor-content tabular-nums">{row.creditTurn ? formatNumber(row.creditTurn) : '—'}</Text>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Text className="text-tremor-content tabular-nums font-medium">{row.debitClose ? num(row.debitClose) : '—'}</Text>
+                    <Text className="text-tremor-content tabular-nums font-medium">{row.debitClose ? formatNumber(row.debitClose) : '—'}</Text>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Text className="text-tremor-content tabular-nums font-medium">{row.creditClose ? num(row.creditClose) : '—'}</Text>
+                    <Text className="text-tremor-content tabular-nums font-medium">{row.creditClose ? formatNumber(row.creditClose) : '—'}</Text>
                   </TableCell>
                 </TableRow>
               ))}
@@ -167,22 +161,22 @@ export default function TrialBalancePage() {
                   <Text className="text-tremor-content font-bold">ИТОГО</Text>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Text className="tabular-nums font-bold text-tremor-content">{num(totals.debitOpen)}</Text>
+                  <Text className="tabular-nums font-bold text-tremor-content">{formatNumber(totals.debitOpen)}</Text>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Text className="tabular-nums font-bold text-tremor-content">{num(totals.creditOpen)}</Text>
+                  <Text className="tabular-nums font-bold text-tremor-content">{formatNumber(totals.creditOpen)}</Text>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Text className="tabular-nums font-bold text-tremor-content">{num(totals.debitTurn)}</Text>
+                  <Text className="tabular-nums font-bold text-tremor-content">{formatNumber(totals.debitTurn)}</Text>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Text className="tabular-nums font-bold text-tremor-content">{num(totals.creditTurn)}</Text>
+                  <Text className="tabular-nums font-bold text-tremor-content">{formatNumber(totals.creditTurn)}</Text>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Text className="tabular-nums font-bold text-tremor-content">{num(totals.debitClose)}</Text>
+                  <Text className="tabular-nums font-bold text-tremor-content">{formatNumber(totals.debitClose)}</Text>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Text className="tabular-nums font-bold text-tremor-content">{num(totals.creditClose)}</Text>
+                  <Text className="tabular-nums font-bold text-tremor-content">{formatNumber(totals.creditClose)}</Text>
                 </TableCell>
               </TableRow>
             </TableBody>

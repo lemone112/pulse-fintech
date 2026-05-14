@@ -24,19 +24,11 @@ import {
   TableRow,
 } from '@tremor/react'
 import { TrendingUp, TrendingDown, Wallet, ArrowUpDown } from 'lucide-react'
+import { formatMoney, formatCompact } from '@/lib/utils'
 
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
-}
-
-const rub = (v: number) =>
-  new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(v)
-
-const moneyFormatter = (v: number) => {
-  if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M ₽`
-  if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(0)}K ₽`
-  return `${v} ₽`
 }
 
 const cashflowData = [
@@ -84,28 +76,28 @@ export default function CashflowPage() {
             <TrendingUp className="h-4 w-4 text-emerald-500" />
             <Text className="text-tremor-content-subtle">Операционный</Text>
           </Flex>
-          <Metric className="text-success">{rub(totalOperating)}</Metric>
+          <Metric className="text-success">{formatMoney(totalOperating)}</Metric>
         </Card>
         <Card>
           <Flex alignItems="center" className="gap-2">
             <TrendingDown className="h-4 w-4 text-red-500" />
             <Text className="text-tremor-content-subtle">Инвестиционный</Text>
           </Flex>
-          <Metric className="text-danger">{rub(totalInvesting)}</Metric>
+          <Metric className="text-danger">{formatMoney(totalInvesting)}</Metric>
         </Card>
         <Card>
           <Flex alignItems="center" className="gap-2">
             <ArrowUpDown className="h-4 w-4 text-blue-500" />
             <Text className="text-tremor-content-subtle">Финансовый</Text>
           </Flex>
-          <Metric className="text-info">{rub(totalFinancing)}</Metric>
+          <Metric className="text-info">{formatMoney(totalFinancing)}</Metric>
         </Card>
         <Card>
           <Flex alignItems="center" className="gap-2">
             <Wallet className="h-4 w-4 text-tremor-content-subtle" />
             <Text className="text-tremor-content-subtle">Остаток</Text>
           </Flex>
-          <Metric>{rub(currentBalance)}</Metric>
+          <Metric>{formatMoney(currentBalance)}</Metric>
         </Card>
       </Grid>
 
@@ -120,7 +112,7 @@ export default function CashflowPage() {
                 index="month"
                 categories={['operating', 'investing', 'financing']}
                 colors={['emerald', 'red', 'blue']}
-                valueFormatter={moneyFormatter}
+                valueFormatter={formatCompact}
                 showGridLines={true}
                 showAnimation={true}
                 showLegend={true}
@@ -139,7 +131,7 @@ export default function CashflowPage() {
                 index="month"
                 categories={['balance']}
                 colors={['emerald']}
-                valueFormatter={moneyFormatter}
+                valueFormatter={formatCompact}
                 showGridLines={true}
                 showAnimation={true}
                 showLegend={true}
@@ -184,7 +176,7 @@ export default function CashflowPage() {
                           v > 0 ? 'text-success' : v < 0 ? 'text-danger' : 'text-tremor-content-subtle'
                         }`}
                       >
-                        {v !== 0 ? rub(v) : '—'}
+                        {v !== 0 ? formatMoney(v) : '—'}
                       </Text>
                     </TableCell>
                   ))}

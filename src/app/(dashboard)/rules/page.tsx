@@ -22,9 +22,6 @@ const container = {
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
 }
 
-const rub = (v: number) =>
-  new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(v)
-
 type ActionType = 'categorize' | 'autoapprove' | 'notify'
 type ConditionType = 'category' | 'amount' | 'counterparty'
 

@@ -18,18 +18,12 @@ import {
   Divider,
 } from '@tremor/react'
 import { Scale, ShieldCheck, Percent } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatMoney, formatNumber } from '@/lib/utils'
 
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
 }
-
-const rub = (v: number) =>
-  new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(v)
-
-const num = (v: number) =>
-  new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(v)
 
 // Balance sheet data as of 30.06.2026
 const assets = {
@@ -110,14 +104,14 @@ export default function BalanceSheetPage() {
             <Scale className="h-4 w-4 text-blue-500" />
             <Text className="text-tremor-content-subtle">Валюта баланса</Text>
           </Flex>
-          <Metric>{rub(assets.total)}</Metric>
+          <Metric>{formatMoney(assets.total)}</Metric>
         </Card>
         <Card>
           <Flex alignItems="center" className="gap-2">
             <ShieldCheck className="h-4 w-4 text-emerald-500" />
             <Text className="text-tremor-content-subtle">Собственный капитал</Text>
           </Flex>
-          <Metric className="text-success">{rub(liabilities.equity.total)}</Metric>
+          <Metric className="text-success">{formatMoney(liabilities.equity.total)}</Metric>
         </Card>
         <Card>
           <Flex alignItems="center" className="gap-2">
@@ -151,7 +145,7 @@ export default function BalanceSheetPage() {
                     <Text className="text-tremor-content pl-3">{item.name}</Text>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Text className="text-tremor-content tabular-nums">{num(item.amount)}</Text>
+                    <Text className="text-tremor-content tabular-nums">{formatNumber(item.amount)}</Text>
                   </TableCell>
                 </TableRow>
               ))}
@@ -165,7 +159,7 @@ export default function BalanceSheetPage() {
                     <Text className="text-tremor-content pl-3">{item.name}</Text>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Text className="text-tremor-content tabular-nums">{num(item.amount)}</Text>
+                    <Text className="text-tremor-content tabular-nums">{formatNumber(item.amount)}</Text>
                   </TableCell>
                 </TableRow>
               ))}
@@ -177,7 +171,7 @@ export default function BalanceSheetPage() {
                   <Text className="text-tremor-content font-bold text-base">БАЛАНС</Text>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Text className="text-tremor-content tabular-nums font-bold text-base">{num(assets.total)}</Text>
+                  <Text className="text-tremor-content tabular-nums font-bold text-base">{formatNumber(assets.total)}</Text>
                 </TableCell>
               </TableRow>
             </TableBody>
@@ -203,7 +197,7 @@ export default function BalanceSheetPage() {
                     <Text className="text-tremor-content pl-3">{item.name}</Text>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Text className="text-tremor-content tabular-nums">{num(item.amount)}</Text>
+                    <Text className="text-tremor-content tabular-nums">{formatNumber(item.amount)}</Text>
                   </TableCell>
                 </TableRow>
               ))}
@@ -217,7 +211,7 @@ export default function BalanceSheetPage() {
                     <Text className="text-tremor-content pl-3">{item.name}</Text>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Text className="text-tremor-content tabular-nums">{num(item.amount)}</Text>
+                    <Text className="text-tremor-content tabular-nums">{formatNumber(item.amount)}</Text>
                   </TableCell>
                 </TableRow>
               ))}
@@ -231,7 +225,7 @@ export default function BalanceSheetPage() {
                     <Text className="text-tremor-content pl-3">{item.name}</Text>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Text className="text-tremor-content tabular-nums">{num(item.amount)}</Text>
+                    <Text className="text-tremor-content tabular-nums">{formatNumber(item.amount)}</Text>
                   </TableCell>
                 </TableRow>
               ))}
@@ -243,7 +237,7 @@ export default function BalanceSheetPage() {
                   <Text className="text-tremor-content font-bold text-base">БАЛАНС</Text>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Text className="text-tremor-content tabular-nums font-bold text-base">{num(liabilities.total)}</Text>
+                  <Text className="text-tremor-content tabular-nums font-bold text-base">{formatNumber(liabilities.total)}</Text>
                 </TableCell>
               </TableRow>
             </TableBody>
@@ -271,7 +265,7 @@ function SubtotalRow({ label, amount }: { label: string; amount: number }) {
         <Text className="text-tremor-content font-semibold">{label}</Text>
       </TableCell>
       <TableCell className="text-right">
-        <Text className="text-tremor-content tabular-nums font-semibold">{num(amount)}</Text>
+        <Text className="text-tremor-content tabular-nums font-semibold">{formatNumber(amount)}</Text>
       </TableCell>
     </TableRow>
   )

@@ -10,24 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { STATUS_MAP, TYPE_MAP, TYPE_ICON_MAP } from './constants'
-
-type TremorBadgeColor = 'emerald' | 'amber' | 'red' | 'gray' | 'blue' | 'violet' | 'pink' | 'cyan' | 'orange' | 'indigo' | 'teal' | 'fuchsia' | 'purple' | 'lime' | 'yellow' | 'rose'
-
-function statusToTremorColor(status: string): TremorBadgeColor {
-  switch (status) {
-    case 'signed':
-      return 'emerald'
-    case 'pending':
-      return 'amber'
-    case 'paid':
-      return 'emerald'
-    case 'draft':
-      return 'gray'
-    default:
-      return 'gray'
-  }
-}
+import { STATUS_MAP, TYPE_MAP, TYPE_ICON_MAP, statusToTremorColor } from './constants'
 
 interface DocumentCardProps {
   document: {

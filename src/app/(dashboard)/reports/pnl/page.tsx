@@ -18,15 +18,12 @@ import {
   Divider,
 } from '@tremor/react'
 import { TrendingUp, TrendingDown, CircleDollarSign } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatMoney } from '@/lib/utils'
 
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
 }
-
-const rub = (v: number) =>
-  new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(v)
 
 // Demo data Q2 2026 vs Q1 2026
 const pnlData = {
@@ -105,7 +102,7 @@ export default function PnlPage() {
                 <Icon className={cn('h-4 w-4', kpi.color)} />
                 <Text className="text-tremor-content-subtle">{kpi.label}</Text>
               </Flex>
-              <Metric>{rub(kpi.value)}</Metric>
+              <Metric>{formatMoney(kpi.value)}</Metric>
               <Flex alignItems="center" className="gap-1 mt-1">
                 <BadgeDelta
                   deltaType={kpi.delta >= 0 ? 'increase' : 'decrease'}
@@ -180,11 +177,11 @@ function PnlRow({ name, q2, q1 }: { name: string; q2: number; q1: number }) {
       </TableCell>
       <TableCell className="text-right">
         <Text className={cn('tabular-nums', q2 > 0 ? 'text-success' : q2 < 0 ? 'text-danger' : 'text-tremor-content-subtle')}>
-          {rub(q2)}
+          {formatMoney(q2)}
         </Text>
       </TableCell>
       <TableCell className="text-right">
-        <Text className="text-tremor-content-subtle tabular-nums">{rub(q1)}</Text>
+        <Text className="text-tremor-content-subtle tabular-nums">{formatMoney(q1)}</Text>
       </TableCell>
       <TableCell className="text-right">
         <Text
@@ -193,7 +190,7 @@ function PnlRow({ name, q2, q1 }: { name: string; q2: number; q1: number }) {
             change > 0 ? 'text-success' : change < 0 ? 'text-danger' : 'text-tremor-content-subtle'
           )}
         >
-          {change >= 0 ? '+' : ''}{rub(change)}
+          {change >= 0 ? '+' : ''}{formatMoney(change)}
         </Text>
       </TableCell>
     </TableRow>
@@ -209,11 +206,11 @@ function PnlSubtotalRow({ name, q2, q1, highlight }: { name: string; q2: number;
       </TableCell>
       <TableCell className="text-right">
         <Text className={cn('tabular-nums font-semibold', q2 > 0 ? 'text-success' : q2 < 0 ? 'text-danger' : 'text-tremor-content')}>
-          {rub(q2)}
+          {formatMoney(q2)}
         </Text>
       </TableCell>
       <TableCell className="text-right">
-        <Text className="text-tremor-content-subtle tabular-nums font-semibold">{rub(q1)}</Text>
+        <Text className="text-tremor-content-subtle tabular-nums font-semibold">{formatMoney(q1)}</Text>
       </TableCell>
       <TableCell className="text-right">
         <Text
@@ -222,7 +219,7 @@ function PnlSubtotalRow({ name, q2, q1, highlight }: { name: string; q2: number;
             change > 0 ? 'text-success' : change < 0 ? 'text-danger' : 'text-tremor-content-subtle'
           )}
         >
-          {change >= 0 ? '+' : ''}{rub(change)}
+          {change >= 0 ? '+' : ''}{formatMoney(change)}
         </Text>
       </TableCell>
     </TableRow>

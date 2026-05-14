@@ -15,15 +15,12 @@ import {
   Button,
 } from '@tremor/react'
 import { Calendar, CreditCard, AlertCircle, Banknote, FileCheck, Plus } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatMoney } from '@/lib/utils'
 
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
 }
-
-const rub = (v: number) =>
-  new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(v)
 
 type EventType = 'invoice' | 'tax' | 'salary' | 'dividend' | 'edo'
 
@@ -101,7 +98,7 @@ export default function CalendarPage() {
             <Banknote className="h-4 w-4 text-emerald-500" />
             <Text className="text-tremor-content-subtle">Сумма к оплате</Text>
           </Flex>
-          <Metric>{rub(totalPayable)}</Metric>
+          <Metric>{formatMoney(totalPayable)}</Metric>
         </Card>
       </Grid>
 
@@ -155,7 +152,7 @@ export default function CalendarPage() {
                           <Flex alignItems="center" className="gap-2">
                             {event.amount && (
                               <Text className="text-tremor-content tabular-nums font-medium text-sm">
-                                {rub(event.amount)}
+                                {formatMoney(event.amount)}
                               </Text>
                             )}
                             <Badge color={config.color} size="sm">

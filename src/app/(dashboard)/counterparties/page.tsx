@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Plus, Users, Building2, ArrowUpDown } from 'lucide-react'
 import { Title, Text, Flex, Button, TextInput, Card, List, ListItem } from '@tremor/react'
-import { cn } from '@/lib/utils'
+import { cn, formatSigned } from '@/lib/utils'
 import Link from 'next/link'
 
 const container = {
@@ -98,7 +98,7 @@ export default function CounterpartiesPage() {
                         counterparty.balance < 0 && 'text-danger',
                         counterparty.balance === 0 && 'text-tremor-content-subtle'
                       )}>
-                        {counterparty.balance > 0 ? '+' : ''}{new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(counterparty.balance)}
+                        {formatSigned(counterparty.balance)}
                       </Text>
                       <Text className="text-tremor-content-subtle text-xs">
                         {counterparty.balance > 0 ? 'Нам должны' : counterparty.balance < 0 ? 'Мы должны' : 'Нет долга'}
