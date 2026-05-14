@@ -19,7 +19,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check for JWT token
-  let token = null
+  let token: Awaited<ReturnType<typeof getToken>> = null
   try {
     token = await getToken({
       req: request,

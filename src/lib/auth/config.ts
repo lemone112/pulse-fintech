@@ -1,7 +1,6 @@
 import type { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
-import { compare } from 'crypto'
 import { db } from '@/lib/db'
 
 // Simple password hashing using Web Crypto API (works in Edge/Node)
@@ -89,10 +88,12 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       // Initial sign in — add user data to token
       if (user) {
-        token.id = user.id
-        token.role = (user as Record<string, unknown>).role ?? 'VIEWER'
-        token.organizationId = (user as Record<string, unknown>).organizationId ?? null
-        token.organizationName = (user as Record<string, unknown>).organizationName ?? null
+        token.id = user.id as string
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const u = user as any
+        token.role = String(u.role ?? 'VIEWER')
+        token.organizationId = u.organizationId ?? null
+        token.organizationName = u.organizationName ?? null
       }
       return token
     },
