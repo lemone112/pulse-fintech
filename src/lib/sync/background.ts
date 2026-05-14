@@ -122,8 +122,11 @@ class BackgroundSync {
     if ('serviceWorker' in navigator && 'SyncManager' in window) {
       try {
         const registration = await navigator.serviceWorker.ready
-        await registration.sync.register('pulse-sync')
-        console.log('[BackgroundSync] Service Worker sync registered')
+        // Background Sync API — not all browsers support registration.sync
+        if ('sync' in registration) {
+          await (registration as unknown as { sync: { register: (tag: string) => Promise<void> } }).sync.register('pulse-sync')
+          console.log('[BackgroundSync] Service Worker sync registered')
+        }
       } catch (err) {
         console.warn('[BackgroundSync] Service Worker sync not available:', err)
       }

@@ -204,10 +204,10 @@ export function encodeStateVector(doc: Y.Doc): Uint8Array {
 
 export function observeDoc(
   doc: Y.Doc,
-  callback: (event: Y.YMapEvent<Y.Map<unknown>>) => void,
+  callback: (event: Y.YMapEvent<unknown>) => void,
 ): () => void {
   const fieldsMap = doc.getMap('fields')
-  const handler = (event: Y.YMapEvent<Y.Map<unknown>>) => {
+  const handler = (event: Y.YMapEvent<unknown>) => {
     callback(event)
   }
   fieldsMap.observe(handler)
