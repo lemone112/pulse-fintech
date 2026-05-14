@@ -5,6 +5,10 @@ import { Toaster } from 'sonner'
 import { QueryProvider } from '@/lib/providers/query-provider'
 import './globals.css'
 
+// Force dynamic rendering — Tremor icon props (Lucide components) are functions
+// that cannot be serialized during static prerendering
+export const dynamic = 'force-dynamic'
+
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],

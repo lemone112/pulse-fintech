@@ -385,6 +385,37 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   SKELETON: Shimmer animation
+   ═══════════════════════════════════════════════════════════════════ */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    oklch(from var(--muted-foreground) l c h / 10%) 50%,
+    var(--muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Legacy class — kept for backward compat, mirrors .skeleton-shimmer */
+.pulse-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    oklch(from var(--muted-foreground) l c h / 10%) 50%,
+    var(--muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    A11Y: Reduced motion
    ═══════════════════════════════════════════════════════════════════ */
 
