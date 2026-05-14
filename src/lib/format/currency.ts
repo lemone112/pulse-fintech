@@ -38,6 +38,12 @@ export function formatCompact(amount: string | number): string {
   return compactFormatter.format(num)
 }
 
+export function formatNumber(value: string | number): string {
+  const num = typeof value === 'string' ? parseFloat(value) : value
+  if (!Number.isFinite(num)) return '—'
+  return numberFormatter.format(num).replace('-', '−')
+}
+
 export function formatPercent(value: string | number): string {
   const num = typeof value === 'string' ? parseFloat(value) : value
   if (!Number.isFinite(num)) return '—'

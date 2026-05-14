@@ -22,14 +22,12 @@ import {
   AlertTriangle,
   TrendingUp,
 } from 'lucide-react'
+import { formatMoney } from '@/lib/utils'
 
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
 }
-
-const rub = (v: number) =>
-  new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(v)
 
 type ProjectStatus = 'active' | 'completed' | 'on_hold'
 
@@ -76,11 +74,11 @@ export default function ProjectsPage() {
       <Grid numItems={1} numItemsSm={3} className="gap-4">
         <Card>
           <Text className="text-tremor-content-subtle">Общий бюджет</Text>
-          <Metric>{rub(totalBudget)}</Metric>
+          <Metric>{formatMoney(totalBudget)}</Metric>
         </Card>
         <Card>
           <Text className="text-tremor-content-subtle">Израсходовано</Text>
-          <Metric className="text-tremor-content">{rub(totalSpent)}</Metric>
+          <Metric className="text-tremor-content">{formatMoney(totalSpent)}</Metric>
         </Card>
         <Card>
           <Flex alignItems="center" className="gap-2">
@@ -142,15 +140,15 @@ export default function ProjectsPage() {
                 <div className="space-y-3">
                   <Flex justifyContent="between" alignItems="center">
                     <Text className="text-tremor-content-subtle text-xs">Бюджет</Text>
-                    <Text className="text-tremor-content text-sm font-medium tabular-nums">{rub(project.budget)}</Text>
+                    <Text className="text-tremor-content text-sm font-medium tabular-nums">{formatMoney(project.budget)}</Text>
                   </Flex>
                   <Flex justifyContent="between" alignItems="center">
                     <Text className="text-tremor-content-subtle text-xs">Израсходовано</Text>
-                    <Text className="text-danger text-sm font-medium tabular-nums">{rub(project.spent)}</Text>
+                    <Text className="text-danger text-sm font-medium tabular-nums">{formatMoney(project.spent)}</Text>
                   </Flex>
                   <Flex justifyContent="between" alignItems="center">
                     <Text className="text-tremor-content-subtle text-xs">Остаток</Text>
-                    <Text className="text-success text-sm font-medium tabular-nums">{rub(remaining)}</Text>
+                    <Text className="text-success text-sm font-medium tabular-nums">{formatMoney(remaining)}</Text>
                   </Flex>
 
                   <ProgressBar

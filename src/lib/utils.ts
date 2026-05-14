@@ -10,4 +10,4 @@ export function generateId(): string {
 }
 
 // Re-export from canonical location
-export { formatMoney, formatCompact, formatPercent, formatSigned } from './format/currency'
+export { formatMoney, formatCompact, formatNumber, formatPercent, formatSigned } from './format/currency'

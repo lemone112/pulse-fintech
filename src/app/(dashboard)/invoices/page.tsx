@@ -27,14 +27,12 @@ import {
   User,
   MoreHorizontal,
 } from 'lucide-react'
+import { formatMoney } from '@/lib/utils'
 
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
 }
-
-const rub = (v: number) =>
-  new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(v)
 
 type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue'
 
@@ -104,21 +102,21 @@ export default function InvoicesPage() {
       <Grid numItems={1} numItemsSm={3} className="gap-4">
         <Card>
           <Text className="text-tremor-content-subtle">Оплачено</Text>
-          <Metric className="text-success">{rub(totalPaid)}</Metric>
+          <Metric className="text-success">{formatMoney(totalPaid)}</Metric>
           <Text className="text-tremor-content-subtle mt-1">
             {DEMO_INVOICES.filter((i) => i.status === 'paid').length} счетов
           </Text>
         </Card>
         <Card>
           <Text className="text-tremor-content-subtle">Ожидает оплаты</Text>
-          <Metric className="text-info">{rub(totalPending)}</Metric>
+          <Metric className="text-info">{formatMoney(totalPending)}</Metric>
           <Text className="text-tremor-content-subtle mt-1">
             {DEMO_INVOICES.filter((i) => i.status === 'sent').length} счетов
           </Text>
         </Card>
         <Card>
           <Text className="text-tremor-content-subtle">Просрочено</Text>
-          <Metric className="text-danger">{rub(totalOverdue)}</Metric>
+          <Metric className="text-danger">{formatMoney(totalOverdue)}</Metric>
           <Text className="text-tremor-content-subtle mt-1">
             {DEMO_INVOICES.filter((i) => i.status === 'overdue').length} счетов
           </Text>
@@ -171,7 +169,7 @@ export default function InvoicesPage() {
                           </Flex>
                           <Flex alignItems="center" className="gap-3">
                             <div className="text-right">
-                              <Text className="text-tremor-content tabular-nums font-medium">{rub(invoice.amount)}</Text>
+                              <Text className="text-tremor-content tabular-nums font-medium">{formatMoney(invoice.amount)}</Text>
                               <Text className="text-tremor-content-subtle text-xs">{invoice.description}</Text>
                             </div>
                             <Button variant="light" size="xs" icon={MoreHorizontal} />

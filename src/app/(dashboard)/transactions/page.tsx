@@ -33,14 +33,14 @@ import {
   Download,
 } from 'lucide-react'
 import { KpiCard } from '@/components/pulse/overview/kpi-card'
+import { formatMoney } from '@/lib/utils'
 
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
 }
 
-const rub = (v: number) =>
-  new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(v)
+
 
 const DEMO_TRANSACTIONS = [
   { id: 'TX-001', date: '01.03.2025', counterparty: 'ООО «Альфа»', category: 'Выручка', direction: 'income' as const, amount: 350000, description: 'Оплата по договору №1245' },
@@ -101,15 +101,15 @@ export default function TransactionsPage() {
       <Grid numItems={1} numItemsSm={2} numItemsLg={3} className="gap-4">
         <Card>
           <Text className="text-tremor-content-subtle">Доходы</Text>
-          <Metric className="text-success">{rub(totalIncome)}</Metric>
+          <Metric className="text-success">{formatMoney(totalIncome)}</Metric>
         </Card>
         <Card>
           <Text className="text-tremor-content-subtle">Расходы</Text>
-          <Metric className="text-danger">{rub(totalExpense)}</Metric>
+          <Metric className="text-danger">{formatMoney(totalExpense)}</Metric>
         </Card>
         <Card>
           <Text className="text-tremor-content-subtle">Сальдо</Text>
-          <Metric className={net >= 0 ? 'text-success' : 'text-danger'}>{rub(net)}</Metric>
+          <Metric className={net >= 0 ? 'text-success' : 'text-danger'}>{formatMoney(net)}</Metric>
         </Card>
       </Grid>
 
@@ -195,7 +195,7 @@ export default function TransactionsPage() {
                         tx.direction === 'income' ? 'text-success' : 'text-danger'
                       }`}
                     >
-                      {tx.direction === 'income' ? '+' : '−'}{rub(tx.amount)}
+                      {tx.direction === 'income' ? '+' : '−'}{formatMoney(tx.amount)}
                     </Text>
                   </TableCell>
                 </TableRow>

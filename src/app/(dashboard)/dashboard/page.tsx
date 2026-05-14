@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { BarChart, AreaChart, Card, Title, Text, Grid, Flex, List, ListItem } from '@tremor/react'
 import { KPIGrid } from '@/components/pulse/overview/kpi-card'
+import { formatCompact } from '@/lib/utils'
 
 const container = {
   hidden: { opacity: 0 },
@@ -26,12 +27,6 @@ const balanceData = [
   { month: 'Май', balance: 3800000 },
   { month: 'Июн', balance: 4120000 },
 ]
-
-const moneyFormatter = (v: number) => {
-  if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M ₽`
-  if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(0)}K ₽`
-  return `${v} ₽`
-}
 
 export default function DashboardPage() {
   return (
@@ -64,7 +59,7 @@ export default function DashboardPage() {
                 index="month"
                 categories={['income', 'expense']}
                 colors={['emerald', 'red']}
-                valueFormatter={moneyFormatter}
+                valueFormatter={formatCompact}
                 showGridLines={true}
                 showAnimation={true}
                 showLegend={true}
@@ -89,7 +84,7 @@ export default function DashboardPage() {
                 index="month"
                 categories={['balance']}
                 colors={['blue']}
-                valueFormatter={moneyFormatter}
+                valueFormatter={formatCompact}
                 showGridLines={true}
                 showAnimation={true}
                 showLegend={true}
