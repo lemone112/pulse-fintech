@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-
-// Valid invoice status transitions
-const STATUS_TRANSITIONS: Record<string, string[]> = {
-  DRAFT: ['SENT', 'CANCELLED'],
-  SENT: ['PAID', 'PARTIALLY_PAID', 'OVERDUE', 'CANCELLED'],
-  PARTIALLY_PAID: ['PAID', 'OVERDUE', 'CANCELLED'],
-  OVERDUE: ['PAID', 'PARTIALLY_PAID', 'CANCELLED'],
-  PAID: [],
-  CANCELLED: ['DRAFT'],
-}
+import { canTransition, transition, requiresApproval } from '@/lib/business/invoice-state-machine'
+import { logAudit, AuditActions, EntityTypes } from '@/lib/audit'
 
 // GET /api/invoices/[id]
 export async function GET(
@@ -33,7 +25,7 @@ export async function GET(
     })
 
     if (!invoice) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Счёт не найден' }, { status: 404 })
     }
 
     const paidAmount = invoice.transactions
@@ -45,7 +37,7 @@ export async function GET(
     })
   } catch (error) {
     console.error('[API] GET /invoices/[id] error:', error)
-    return NextResponse.json({ error: 'Failed to fetch invoice' }, { status: 500 })
+    return NextResponse.json({ error: 'Не удалось загрузить счёт' }, { status: 500 })
   }
 }
 
@@ -60,20 +52,45 @@ export async function PUT(
 
     const existing = await db.invoice.findUnique({ where: { id } })
     if (!existing) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Счёт не найден' }, { status: 404 })
     }
 
-    // Handle status transition validation
+    // Handle status transition using the state machine
     if (body.status && body.status !== existing.status) {
-      const allowed = STATUS_TRANSITIONS[existing.status] || []
-      if (!allowed.includes(body.status)) {
+      // Validate transition
+      if (!canTransition(existing.status, body.status)) {
         return NextResponse.json(
-          { error: `Invalid status transition: ${existing.status} → ${body.status}` },
+          { error: `Недопустимый переход статуса: ${existing.status} → ${body.status}` },
           { status: 400 }
         )
       }
+
+      // Check if approval is required
+      const needsApproval = requiresApproval(existing.status, body.status, existing.amount)
+      if (needsApproval && !body._approvalId) {
+        return NextResponse.json(
+          {
+            error: 'Для данного перехода требуется согласование (сумма > 100 000 ₽)',
+            requiresApproval: true,
+            currentStatus: existing.status,
+            targetStatus: body.status,
+          },
+          { status: 403 }
+        )
+      }
+
+      // Use state machine transition
+      try {
+        const userId = body._userId || 'system'
+        const updated = await transition(id, body.status, userId, body.reason)
+        return NextResponse.json({ data: updated })
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Ошибка перехода статуса'
+        return NextResponse.json({ error: message }, { status: 400 })
+      }
     }
 
+    // Non-status updates (e.g. amount, description, etc.)
     const updateData: Record<string, unknown> = {}
     if (body.counterpartyId !== undefined) updateData.counterpartyId = body.counterpartyId
     if (body.number !== undefined) updateData.number = body.number
@@ -83,7 +100,6 @@ export async function PUT(
     if (body.dueDate !== undefined) updateData.dueDate = body.dueDate ? new Date(body.dueDate) : null
     if (body.issuedDate !== undefined) updateData.issuedDate = body.issuedDate ? new Date(body.issuedDate) : null
     if (body.description !== undefined) updateData.description = body.description || null
-    if (body.status !== undefined) updateData.status = body.status
 
     const invoice = await db.invoice.update({
       where: { id },
@@ -94,10 +110,21 @@ export async function PUT(
       },
     })
 
+    // Log audit for non-status updates
+    if (Object.keys(updateData).length > 0) {
+      await logAudit({
+        action: AuditActions.UPDATE,
+        entityType: EntityTypes.INVOICE,
+        entityId: id,
+        organizationId: existing.organizationId,
+        newValue: updateData,
+      })
+    }
+
     return NextResponse.json({ data: invoice })
   } catch (error) {
     console.error('[API] PUT /invoices/[id] error:', error)
-    return NextResponse.json({ error: 'Failed to update invoice' }, { status: 500 })
+    return NextResponse.json({ error: 'Не удалось обновить счёт' }, { status: 500 })
   }
 }
 
@@ -111,22 +138,30 @@ export async function DELETE(
 
     const existing = await db.invoice.findUnique({ where: { id } })
     if (!existing) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Счёт не найден' }, { status: 404 })
     }
 
     // Only allow deletion of DRAFT invoices
     if (existing.status !== 'DRAFT') {
       return NextResponse.json(
-        { error: 'Only DRAFT invoices can be deleted' },
+        { error: 'Можно удалить только счёт в статусе Черновик' },
         { status: 400 }
       )
     }
 
     await db.invoice.delete({ where: { id } })
 
+    await logAudit({
+      action: AuditActions.DELETE,
+      entityType: EntityTypes.INVOICE,
+      entityId: id,
+      organizationId: existing.organizationId,
+      oldValue: { number: existing.number, amount: existing.amount, status: existing.status },
+    })
+
     return NextResponse.json({ data: { id }, deleted: true })
   } catch (error) {
     console.error('[API] DELETE /invoices/[id] error:', error)
-    return NextResponse.json({ error: 'Failed to delete invoice' }, { status: 500 })
+    return NextResponse.json({ error: 'Не удалось удалить счёт' }, { status: 500 })
   }
 }

@@ -44,6 +44,7 @@ model User {
   memberships   OrganizationMember[]
   approvals     ApprovalStep[]
   auditLogs     AuditLog[]
+  notifications Notification[]
 
   @@map("users")
 }
@@ -83,6 +84,8 @@ model Organization {
   projects      Project[]
   rules         Rule[]
   auditLogs     AuditLog[]
+  budgetItems   BudgetItem[]
+  notifications Notification[]
 
   @@map("organizations")
 }
@@ -250,6 +253,7 @@ model Category {
   parent          Category?    @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children        Category[]   @relation("CategoryHierarchy")
   transactions    Transaction[]
+  budgetItems     BudgetItem[]
 
   @@unique([organizationId, name, type])
   @@map("categories")
@@ -423,6 +427,49 @@ model ApprovalStep {
   approver    User           @relation(fields: [approverId], references: [id])
 
   @@map("approval_steps")
+}
+
+// === NOTIFICATIONS ===
+
+model Notification {
+  id              String   @id @default(cuid())
+  userId          String
+  type            String   // invoice_overdue, approval_needed, etc.
+  channel         String   @default("in_app") // in_app, email, push
+  title           String
+  message         String
+  entityType      String?  // Invoice, Transaction, etc.
+  entityId        String?
+  payload         String?  // JSON string in SQLite
+  read            Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId  String?
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+// === BUDGET ===
+
+model BudgetItem {
+  id              String   @id @default(cuid())
+  organizationId  String
+  categoryId      String
+  year            Int
+  month           Int?     // null = annual, 1-12 = monthly
+  amount          Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category        Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, categoryId, year, month])
+  @@map("budget_items")
 }
 
 // === AUDIT ===

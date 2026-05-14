@@ -107,8 +107,8 @@
 | 29 | KPI cards: Move BadgeDelta to header row, wrap Metric value with Bold, increase Metric size via `text-2xl` | ✅ Done |
 | 30 | Replace inline badges: Analytics `<span>` presets → Tremor Badge, Calendar event icon `<div>` → Tremor Badge, approvals `rub()` → shared `formatMoney`, counterparty detail `Intl.NumberFormat` → `formatMoney`/`formatSigned` | ✅ Done |
 | 31 | Tables: All report/transaction pages already use Tremor Table — verified | ✅ Verified |
-| 32 | Tabs: Projects page filter buttons → Tremor TabGroup + TabList + TabPanels | ✅ Done |
-| 33 | TextInput: All pages already use Tremor TextInput — verified (no `@/components/ui/input` imports) | ✅ Verified |
+| 32 | TextInput: All pages already use Tremor TextInput — verified (no `@/components/ui/input` imports) | ✅ Verified |
+| 33 | Tabs: Projects page filter buttons → Tremor TabGroup + TabList + TabPanels | ✅ Done |
 | 34 | Custom flex/grid: Replace `<div className="space-y-*">` with `Flex flexDirection="col"`, replace `<div className="flex items-center gap-2">` with Tremor Flex, replace `grid grid-cols-2` with Tremor Grid, replace `<div>` headers with `Flex flexDirection="col"`, replace chart-grid CSS grid with Tremor Grid | ✅ Done |
 
 ### Key Decisions
@@ -327,3 +327,110 @@
 4. **Protected page**: GET /dashboard (no cookie) → 307 redirect to /login?callbackUrl=/dashboard
 5. **Protected API**: GET /api/transactions (no cookie) → 401 {"error": "Необходима авторизация"}
 6. **Authenticated dashboard**: GET /dashboard (with cookie) → 200
+
+## Phase 5: Business Logic Layer (Task 9-a)
+
+**Date**: 2026-05-15
+
+### Changes Made
+
+| Step | Description | Status |
+|------|-------------|--------|
+| 66 | Invoice State Machine — enforce valid status transitions with audit logging and approval threshold | ✅ Done |
+| 67 | Approval Workflow — multi-step ordered approval system with approve/reject/cancel | ✅ Done |
+| 68 | Rule Engine — auto-categorization and auto-routing rules with priority evaluation | ✅ Done |
+| 69 | Banking Provider Abstraction — factory pattern with Sberbank, Tinkoff, VTB stubs | ✅ Done |
+| 70-71 | ECP Multi-Provider + EDO — 6 ECP providers (КриптоПро, Диадок, Такском, СБИС, Калуга Астрал, 1С-ЭДО) + 2 EDO providers | ✅ Done |
+| 73 | Kafka Event Bus — in-process event bus with Kafka-compatible interface, event types for all domain events | ✅ Done |
+| 73b | Kafka Adapter — stub wrapping in-memory bus, ready for kafkajs swap | ✅ Done |
+| 74 | AI Gateway — own gateway with 4 model classes (embedding, cheap, base, frontier), rate limiting, caching, fallback chain | ✅ Done |
+| 75-76 | AI Context Panel — removed hardcoded counts (now fetched from API), added MCP tools with function names, improved suggested prompts with labels | ✅ Done |
+| 77 | Notification System — in-app notifications with 9 types, DB storage, helper functions for common scenarios + Notification Prisma model | ✅ Done |
+| 78 | Export System — PDF (HTML-to-PDF), Excel (SpreadsheetML + CSV), CSV exports + /api/export route | ✅ Done |
+| 79 | Budget Module — annual/monthly planning, plan vs actual, variance analysis, forecast + BudgetItem Prisma model | ✅ Done |
+
+### Key Decisions
+
+1. **Invoice State Machine as separate module** — Extracted status transition logic from the API route into `invoice-state-machine.ts`. The `canTransition()` function is pure (no DB access), while `transition()` handles the full workflow (validate → update → audit log). The API route now delegates to the state machine, which ensures consistency across all code paths.
+
+2. **Approval threshold for invoices** — Invoices over 100 000 ₽ require approval before transitioning to PAID or CANCELLED. The state machine returns a `requiresApproval` flag that the API route checks, returning 403 with details if approval is missing.
+
+3. **Rule Engine with priority-first-match** — Rules are evaluated in priority order (higher = first). First matching rule wins for `evaluateRules()`, but `evaluateAllRules()` collects all matches (useful for tag accumulation). Supports 9 operators including regex and nested field access via dot notation.
+
+4. **Banking abstraction via interface + factory** — `BankingProvider` interface defines 6 methods (getAccounts, getTransactions, getBalance, initiatePayment, getStatement, healthCheck). Factory supports aliases (sber/sberbank, tink/tinkoff/tbank). All three providers (Sberbank, Tinkoff, VTB) are stub implementations returning structured mock data.
+
+5. **ECP provider naming** — Russian aliases supported (`криптопро`, `диадок`, etc.) alongside English names. Each provider implements `signDocument`, `verifySignature`, `getCertificates`, and `getProviderInfo`. Provider info includes supported algorithms (GOST R 34.10-2012) and formats (PKCS#7, CMS).
+
+6. **EDO as separate module from ECP** — EDO (electronic document flow) and ECP (digital signature) are distinct concerns. Diadoc appears in both as it offers both services. EDO adds `sendDocument`, `receiveDocuments`, `getDocumentStatus`, `getCounterpartyStatus` methods.
+
+7. **Event bus with Kafka-compatible interface** — In-memory `EventEmitter`-based bus with `emit`, `on`, `onAny` methods. The Kafka adapter wraps it and logs that it "would produce to topic" when Kafka brokers are configured. 9 event types defined (TransactionCreated/Updated/Deleted, InvoiceCreated/StatusChanged, ApprovalRequested/StepCompleted, DocumentSigned, RuleTriggered).
+
+8. **AI Gateway with 4 model classes and fallback chain** — Models: embedding (text-embedding-3-small), cheap (gpt-4o-mini), base (gpt-4o), frontier (o3). Gateway handles rate limiting per model, response caching (5min TTL, 1000 entries), and fallback chain (frontier→base→cheap). Usage tracking with `getUsageStats()`.
+
+9. **Context panel uses real API counts** — Replaced hardcoded "1 245" etc. with `fetch('/api/transactions?limit=1')` calls that read `meta.total` from the response. Added loading states with "..." placeholders. MCP tools now show sub-function names (list_transactions, get_invoice, etc.).
+
+10. **Notification system with helper functions** — Generic `createNotification()` plus domain-specific helpers: `notifyInvoiceOverdue`, `notifyApprovalNeeded`, `notifyApprovalCompleted`, `notifyRuleTriggered`, `notifyDocumentSigned`. Notification model stored in DB with `read` boolean, indexed on `[userId, read]` and `[userId, createdAt]`.
+
+11. **Export via HTML-to-PDF** — PDF export generates a styled HTML document that can be rendered by headless browsers. Excel export provides both SpreadsheetML (actual .xls) and CSV (with BOM for Russian Excel). CSV uses semicolon delimiter (Russian locale convention) with proper quoting.
+
+12. **Budget with plan-vs-actual** — `BudgetItem` model with unique constraint on `[organizationId, categoryId, year, month]`. `getPlanVsActual()` computes actuals from transaction data. `analyzeVariances()` identifies significant deviations with severity ratings. `getForecast()` uses simple moving average with confidence levels.
+
+### Prisma Schema Additions (2 new models)
+
+- **Notification** — `{ id, userId, type, channel, title, message, entityType, entityId, payload, read, createdAt }` with indexes on `[userId, read]` and `[userId, createdAt]`
+- **BudgetItem** — `{ id, organizationId, categoryId, year, month?, amount, createdAt, updatedAt }` with unique constraint on `[organizationId, categoryId, year, month]`
+
+### Files Created (27 total)
+
+**Business Logic**:
+- `src/lib/business/invoice-state-machine.ts` — Invoice state transitions + audit logging
+- `src/lib/business/approval-workflow.ts` — Multi-step approval system
+- `src/lib/business/rule-engine.ts` — Auto-categorization and routing rules
+- `src/lib/business/budget.ts` — Budget planning, plan vs actual, forecast
+
+**Banking Integration**:
+- `src/lib/integrations/banking/types.ts` — BankingProvider interface + types
+- `src/lib/integrations/banking/sberbank.ts` — Сбербанк stub
+- `src/lib/integrations/banking/tinkoff.ts` — Т-Банк stub
+- `src/lib/integrations/banking/vtb.ts` — ВТБ stub
+- `src/lib/integrations/banking/index.ts` — Factory + available providers
+
+**ECP Integration**:
+- `src/lib/integrations/ecp/types.ts` — ECPProvider interface + types
+- `src/lib/integrations/ecp/providers/cryptopro.ts` — КриптоПро stub
+- `src/lib/integrations/ecp/providers/diadoc.ts` — Контур.Диадок stub
+- `src/lib/integrations/ecp/providers/taxcom.ts` — Такском stub
+- `src/lib/integrations/ecp/providers/sbis.ts` — СБИС stub
+- `src/lib/integrations/ecp/providers/kaluga-astral.ts` — Калуга Астрал stub
+- `src/lib/integrations/ecp/providers/1c-edo.ts` — 1С-ЭДО stub
+- `src/lib/integrations/ecp/index.ts` — Factory + available providers
+
+**EDO Integration**:
+- `src/lib/integrations/edo/types.ts` — EDOProvider interface + types
+- `src/lib/integrations/edo/diadoc.ts` — Контур.Диадок EDO stub
+- `src/lib/integrations/edo/sbis.ts` — СБИС EDO stub
+- `src/lib/integrations/edo/index.ts` — Factory + available providers
+
+**Event Bus**:
+- `src/lib/events/types.ts` — Event types (9 event types)
+- `src/lib/events/bus.ts` — In-memory event bus singleton
+- `src/lib/events/kafka-adapter.ts` — Kafka adapter stub
+
+**AI Gateway**:
+- `src/lib/ai/gateway.ts` — AI Gateway with 4 model classes, caching, rate limiting, fallback
+
+**Notifications**:
+- `src/lib/notifications/types.ts` — Notification types and constants
+- `src/lib/notifications/service.ts` — Notification CRUD + domain helpers
+
+**Export**:
+- `src/lib/export/pdf.ts` — PDF export (HTML-to-PDF)
+- `src/lib/export/excel.ts` — Excel export (SpreadsheetML + CSV)
+- `src/lib/export/csv.ts` — CSV export
+- `src/app/api/export/route.ts` — Export API route
+
+### Files Modified (3 total)
+
+- `src/app/api/invoices/[id]/route.ts` — Rewritten to use invoice state machine instead of direct status changes
+- `src/components/pulse/ai/context-panel.tsx` — Removed hardcoded counts, added dynamic fetching, improved MCP tools, better suggested prompts
+- `prisma/schema.prisma` — Added Notification and BudgetItem models, updated relations

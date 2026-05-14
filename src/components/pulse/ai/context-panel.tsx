@@ -1,49 +1,77 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Database,
-  Globe,
   Wrench,
   Clock,
   Sparkles,
   CheckCircle2,
   XCircle,
   ChevronRight,
+  RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { aiConfig } from '@/lib/ai/config'
 import { Card, Flex, Text } from '@tremor/react'
 
+// Suggested prompts that actually work with the PULSE system
 const SUGGESTED_PROMPTS = [
-  'Какие категории имеют наибольший рост расходов?',
-  'Сравни доходы этого месяца с прошлым',
-  'Найди аномальные транзакции',
-  'Составь прогноз денежных потоков',
-  'Покажи топ-5 контрагентов по дебиторке',
-  'Рассчитай рентабельность по проектам',
+  {
+    label: 'Анализ расходов по категориям',
+    prompt: 'Покажи расходы по категориям за текущий месяц и сравни с предыдущим',
+  },
+  {
+    label: 'Просроченные счета',
+    prompt: 'Найди все просроченные счета и посчитай общую сумму дебиторской задолженности',
+  },
+  {
+    label: 'Денежный поток',
+    prompt: 'Составь прогноз денежных потоков на следующий квартал на основе текущих данных',
+  },
+  {
+    label: 'Рентабельность проектов',
+    prompt: 'Рассчитай рентабельность по каждому проекту и выдели самые прибыльные',
+  },
+  {
+    label: 'Аномальные транзакции',
+    prompt: 'Найди аномальные транзакции — суммы, значительно отличающиеся от среднего по категории',
+  },
+  {
+    label: 'Бюджет vs Факт',
+    prompt: 'Сравни плановые и фактические показатели по статьям бюджета за текущий период',
+  },
 ]
 
+// MCP tools — placeholder for Model Context Protocol integration
 const MCP_TOOLS = [
-  { name: 'Firecrawl', description: 'Поиск в интернете', connected: true },
-  { name: 'Pulse Tools', description: 'Доступ к данным Pulse', connected: true },
-  { name: 'Calculator', description: 'Математические расчёты', connected: false },
+  {
+    name: 'Pulse Data',
+    description: 'Доступ к транзакциям, счетам и отчётам',
+    connected: true,
+    tools: ['list_transactions', 'get_invoice', 'get_report', 'list_categories'],
+  },
+  {
+    name: 'Калькулятор',
+    description: 'Математические расчёты и формулы',
+    connected: true,
+    tools: ['calculate', 'convert_currency'],
+  },
+  {
+    name: 'Внешние данные',
+    description: 'Курсы валют, налоговые ставки',
+    connected: false,
+    tools: ['get_exchange_rate', 'get_tax_rates'],
+  },
 ]
 
-const DATA_CONTEXT = [
-  { label: 'Транзакции', count: '1 245', icon: '💳' },
-  { label: 'Контрагенты', count: '87', icon: '👥' },
-  { label: 'Категории', count: '24', icon: '🏷' },
-  { label: 'Проекты', count: '12', icon: '📁' },
-  { label: 'Счета', count: '156', icon: '📄' },
-]
-
-const RECENT_QUERIES = [
-  'Анализ расходов за май',
-  'Дебиторская задолженность',
-  'Прогноз на Q3',
-]
+interface DataContextItem {
+  label: string
+  count: number | null
+  icon: string
+  loading: boolean
+}
 
 interface ContextPanelProps {
   recentQuery?: string
@@ -53,15 +81,83 @@ interface ContextPanelProps {
 export function ContextPanel({ recentQuery, onSuggestionClick }: ContextPanelProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>('data')
 
+  // Data context — loaded from API instead of hardcoded
+  const [dataContext, setDataContext] = useState<DataContextItem[]>([
+    { label: 'Транзакции', count: null, icon: '💳', loading: true },
+    { label: 'Контрагенты', count: null, icon: '👥', loading: true },
+    { label: 'Категории', count: null, icon: '🏷', loading: true },
+    { label: 'Проекты', count: null, icon: '📁', loading: true },
+    { label: 'Счета', count: null, icon: '📄', loading: true },
+  ])
+
+  // Fetch real counts from the API
+  useEffect(() => {
+    let cancelled = false
+
+    async function fetchCounts() {
+      try {
+        const [transactions, counterparties, categories, projects, invoices] = await Promise.allSettled([
+          fetch('/api/transactions?limit=1').then(r => r.json()).then(d => d.meta?.total ?? d.data?.length ?? 0),
+          fetch('/api/counterparties?limit=1').then(r => r.json()).then(d => d.meta?.total ?? d.data?.length ?? 0),
+          fetch('/api/categories?limit=1').then(r => r.json()).then(d => d.meta?.total ?? d.data?.length ?? 0),
+          fetch('/api/projects?limit=1').then(r => r.json()).then(d => d.meta?.total ?? d.data?.length ?? 0),
+          fetch('/api/invoices?limit=1').then(r => r.json()).then(d => d.meta?.total ?? d.data?.length ?? 0),
+        ])
+
+        if (cancelled) return
+
+        const counts = [transactions, counterparties, categories, projects, invoices].map(
+          (result) => result.status === 'fulfilled' ? result.value : 0
+        )
+
+        setDataContext((prev) =>
+          prev.map((item, i) => ({
+            ...item,
+            count: counts[i],
+            loading: false,
+          }))
+        )
+      } catch {
+        if (!cancelled) {
+          setDataContext((prev) =>
+            prev.map((item) => ({ ...item, loading: false, count: 0 }))
+          )
+        }
+      }
+    }
+
+    fetchCounts()
+    return () => { cancelled = true }
+  }, [])
+
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section)
   }
 
+  const formatCount = (count: number | null, loading: boolean): string => {
+    if (loading) return '...'
+    if (count === null) return '—'
+    return count.toLocaleString('ru-RU')
+  }
+
   return (
     <div className="h-full overflow-y-auto custom-scrollbar p-4 space-y-4">
-      <Text className="text-sm font-semibold text-tremor-content">Контекст</Text>
+      <Flex justifyContent="between" alignItems="center">
+        <Text className="text-sm font-semibold text-tremor-content">Контекст</Text>
+        <button
+          onClick={() => {
+            setDataContext((prev) => prev.map((item) => ({ ...item, loading: true })))
+            // Re-trigger fetch
+            window.dispatchEvent(new CustomEvent('refresh-context'))
+          }}
+          className="text-tremor-content-subtle hover:text-tremor-content transition-colors"
+          title="Обновить данные"
+        >
+          <RefreshCw className="h-3 w-3" />
+        </button>
+      </Flex>
 
-      {/* Data context */}
+      {/* Data context — dynamic counts from API */}
       <div className="space-y-1">
         <button
           onClick={() => toggleSection('data')}
@@ -79,20 +175,25 @@ export function ContextPanel({ recentQuery, onSuggestionClick }: ContextPanelPro
             animate={{ height: 'auto', opacity: 1 }}
             className="space-y-1.5 pl-1"
           >
-            {DATA_CONTEXT.map((item) => (
+            {dataContext.map((item) => (
               <Flex justifyContent="between" alignItems="center" key={item.label} className="rounded-md px-2 py-1.5 hover:bg-tremor-background-muted transition-colors">
                 <Text className="text-sm text-tremor-content flex items-center gap-2">
                   <span>{item.icon}</span>
                   {item.label}
                 </Text>
-                <Text className="text-xs tabular-nums text-tremor-content-subtle">{item.count}</Text>
+                <Text className={cn(
+                  'text-xs tabular-nums',
+                  item.loading ? 'text-tremor-content-subtle animate-pulse' : 'text-tremor-content-subtle'
+                )}>
+                  {formatCount(item.count, item.loading)}
+                </Text>
               </Flex>
             ))}
           </motion.div>
         )}
       </div>
 
-      {/* MCP Tools */}
+      {/* MCP Tools — Model Context Protocol integration */}
       <div className="space-y-1">
         <button
           onClick={() => toggleSection('tools')}
@@ -111,17 +212,31 @@ export function ContextPanel({ recentQuery, onSuggestionClick }: ContextPanelPro
             className="space-y-1.5 pl-1"
           >
             {MCP_TOOLS.map((tool) => (
-              <Flex justifyContent="between" alignItems="center" key={tool.name} className="rounded-md px-2 py-1.5 hover:bg-tremor-background-muted transition-colors">
-                <div>
-                  <Text className="text-sm text-tremor-content">{tool.name}</Text>
-                  <Text className="text-xs text-tremor-content-subtle">{tool.description}</Text>
-                </div>
-                {tool.connected ? (
-                  <CheckCircle2 className="h-4 w-4 text-success" />
-                ) : (
-                  <XCircle className="h-4 w-4 text-tremor-content-subtle" />
+              <div key={tool.name} className="rounded-md px-2 py-1.5 hover:bg-tremor-background-muted transition-colors">
+                <Flex justifyContent="between" alignItems="center">
+                  <div>
+                    <Text className="text-sm text-tremor-content">{tool.name}</Text>
+                    <Text className="text-xs text-tremor-content-subtle">{tool.description}</Text>
+                  </div>
+                  {tool.connected ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-tremor-content-subtle" />
+                  )}
+                </Flex>
+                {tool.connected && tool.tools.length > 0 && (
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {tool.tools.map((t) => (
+                      <span
+                        key={t}
+                        className="inline-flex items-center rounded-full bg-tremor-background-muted px-2 py-0.5 text-[10px] text-tremor-content-subtle"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
                 )}
-              </Flex>
+              </div>
             ))}
           </motion.div>
         )}
@@ -146,30 +261,33 @@ export function ContextPanel({ recentQuery, onSuggestionClick }: ContextPanelPro
               animate={{ height: 'auto', opacity: 1 }}
               className="space-y-1 pl-1"
             >
-              {RECENT_QUERIES.map((query) => (
-                <div key={query} className="rounded-md px-2 py-1.5 text-sm text-tremor-content-subtle hover:bg-tremor-background-muted hover:text-tremor-content transition-colors cursor-pointer">
-                  {query}
-                </div>
-              ))}
+              <div className="rounded-md px-2 py-1.5 text-sm text-tremor-content-subtle hover:bg-tremor-background-muted hover:text-tremor-content transition-colors cursor-pointer">
+                {recentQuery}
+              </div>
             </motion.div>
           )}
         </div>
       )}
 
-      {/* Suggested prompts */}
+      {/* Suggested prompts — with descriptive labels */}
       <div className="space-y-2">
         <Text className="text-xs font-medium text-tremor-content-subtle uppercase tracking-wider flex items-center gap-1.5">
           <Sparkles className="h-3 w-3" />
           Предложения
         </Text>
         <div className="space-y-1">
-          {SUGGESTED_PROMPTS.map((prompt) => (
+          {SUGGESTED_PROMPTS.map((suggestion) => (
             <button
-              key={prompt}
-              onClick={() => onSuggestionClick?.(prompt)}
-              className="block w-full text-left rounded-md px-2 py-1.5 text-sm text-tremor-content-subtle hover:bg-tremor-background-muted hover:text-tremor-content transition-colors"
+              key={suggestion.label}
+              onClick={() => onSuggestionClick?.(suggestion.prompt)}
+              className="block w-full text-left rounded-md px-2 py-1.5 hover:bg-tremor-background-muted transition-colors group"
             >
-              {prompt}
+              <Text className="text-sm text-tremor-content group-hover:text-tremor-content-emphasis transition-colors">
+                {suggestion.label}
+              </Text>
+              <Text className="text-xs text-tremor-content-subtle line-clamp-1">
+                {suggestion.prompt}
+              </Text>
             </button>
           ))}
         </div>
@@ -179,15 +297,23 @@ export function ContextPanel({ recentQuery, onSuggestionClick }: ContextPanelPro
       <Card className="space-y-2">
         <Text className="text-xs font-medium text-tremor-content-subtle">Статус AI</Text>
         <Flex alignItems="center" className="gap-2">
-          <div className={cn('h-2 w-2 rounded-full', aiConfig.baseUrl ? 'bg-success' : 'bg-tremor-content-subtle')} />
+          <div className={cn('h-2 w-2 rounded-full', aiConfig.baseUrl ? 'bg-emerald-500' : 'bg-tremor-content-subtle')} />
           <Text className="text-xs text-tremor-content">
             {aiConfig.baseUrl ? 'Подключено' : 'Не настроено'}
           </Text>
         </Flex>
         {aiConfig.baseUrl && (
-          <Text className="text-xs text-tremor-content-subtle">
-            Модель: {aiConfig.models.base}
-          </Text>
+          <div className="space-y-0.5">
+            <Text className="text-xs text-tremor-content-subtle">
+              Быстрая: {aiConfig.models.cheap}
+            </Text>
+            <Text className="text-xs text-tremor-content-subtle">
+              Базовая: {aiConfig.models.base}
+            </Text>
+            <Text className="text-xs text-tremor-content-subtle">
+              Продвинутая: {aiConfig.models.frontier}
+            </Text>
+          </div>
         )}
       </Card>
     </div>
