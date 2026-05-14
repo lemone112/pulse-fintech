@@ -93,3 +93,58 @@
 - `src/app/(dashboard)/dashboard/page.tsx` — Tremor-first improvements
 - `src/app/(dashboard)/analytics/page.tsx` — Tremor Badge, Subtitle
 - `src/components/pulse/overview/kpi-card.tsx` — Bold, BadgeDelta repositioning
+
+## Phase 2b: Migrate All Pages to Tremor-first Components (Task 6-b)
+
+**Date**: 2026-05-14
+**Commit**: `364c1ab`
+
+### Changes Made
+
+| Step | Description | Status |
+|------|-------------|--------|
+| 28 | Dashboard page: Replace `<div>` headers with Tremor Flex, chart wrapper `<div className="p-5">` with Tremor Title, transaction direction icons with Tremor Badge, text with Bold | ✅ Done |
+| 29 | KPI cards: Move BadgeDelta to header row, wrap Metric value with Bold, increase Metric size via `text-2xl` | ✅ Done |
+| 30 | Replace inline badges: Analytics `<span>` presets → Tremor Badge, Calendar event icon `<div>` → Tremor Badge, approvals `rub()` → shared `formatMoney`, counterparty detail `Intl.NumberFormat` → `formatMoney`/`formatSigned` | ✅ Done |
+| 31 | Tables: All report/transaction pages already use Tremor Table — verified | ✅ Verified |
+| 32 | Tabs: Projects page filter buttons → Tremor TabGroup + TabList + TabPanels | ✅ Done |
+| 33 | TextInput: All pages already use Tremor TextInput — verified (no `@/components/ui/input` imports) | ✅ Verified |
+| 34 | Custom flex/grid: Replace `<div className="space-y-*">` with `Flex flexDirection="col"`, replace `<div className="flex items-center gap-2">` with Tremor Flex, replace `grid grid-cols-2` with Tremor Grid, replace `<div>` headers with `Flex flexDirection="col"`, replace chart-grid CSS grid with Tremor Grid | ✅ Done |
+
+### Key Decisions
+
+1. **BadgeDelta repositioned in KPI card** — Moved from the delta row (bottom) to the card header row (top-right) alongside the title. This makes the delta indicator more scannable and the Metric value more prominent with `text-2xl Bold`.
+
+2. **Projects page: Button filters → TabGroup** — Replaced the custom button-based filter (`variant={filter === f ? 'primary' : 'secondary'}`) with Tremor `TabGroup`/`TabList`/`Tab`/`TabPanels`/`TabPanel`. The entire project grid is now wrapped in a `Card` containing the TabGroup for better visual cohesion.
+
+3. **Analytics presets: `<span>` → Tremor Badge** — The inline `<span className="inline-flex items-center gap-1.5 rounded-full border...">` replaced with `<Badge size="sm" color="gray" icon={BarChart3}>`. Cleaner API, consistent styling, automatic dark mode support.
+
+4. **Calendar event icons: Hardcoded color divs → Tremor Badge** — The `<div className={cn('bg-blue-50 text-blue-600', ...)}` replaced with `<Badge size="md" color={config.color}>`. Eliminates 5 hardcoded color combinations and provides automatic dark mode support via Tremor tokens.
+
+5. **`rub()` formatter removed from approvals** — Replaced the duplicate `rub()` function with shared `formatMoney()` from `@/lib/utils`. Same for counterparty detail page's inline `Intl.NumberFormat` calls.
+
+6. **Chart card wrappers simplified** — Removed inner `<div className="p-5">` wrappers from dashboard and cashflow chart Cards. Tremor Card already provides padding; chart titles now use `<Title className="text-tremor-content-subtle text-sm font-medium">` with `<BarChart className="mt-4">` for spacing.
+
+7. **Universal `<div>` → `Flex flexDirection="col"`** — Every page header previously used `<div>` wrapping `<Title>` + `<Text>`. All now use `<Flex flexDirection="col">` for semantic consistency.
+
+### Files Modified (17 total)
+
+- `src/app/(dashboard)/dashboard/page.tsx` — Tremor Flex/Badge/Bold, chart Title
+- `src/app/(dashboard)/transactions/page.tsx` — Flex flexDirection="col", wrapper div→Flex
+- `src/app/(dashboard)/invoices/page.tsx` — Flex flexDirection="col" header
+- `src/app/(dashboard)/projects/page.tsx` — TabGroup replaces filter buttons
+- `src/app/(dashboard)/categories/page.tsx` — Grid replaces Flex+flex-1 KPI, Flex header
+- `src/app/(dashboard)/counterparties/page.tsx` — Flex header, Flex col detail, Flex text-right→alignItems="end"
+- `src/app/(dashboard)/counterparties/[id]/page.tsx` — formatMoney/formatSigned, Grid responsive, Flex flexDirection="col"
+- `src/app/(dashboard)/rules/page.tsx` — Flex header, Flex col rules list
+- `src/app/(dashboard)/approvals/page.tsx` — formatMoney replaces rub(), Flex header
+- `src/app/(dashboard)/analytics/page.tsx` — Badge replaces span, Subtitle, Flex header
+- `src/app/(dashboard)/planning/calendar/page.tsx` — Badge replaces colored divs, Flex header/list
+- `src/app/(dashboard)/reports/pnl/page.tsx` — Flex header
+- `src/app/(dashboard)/reports/cashflow/page.tsx` — Flex header, Title replaces inner div
+- `src/app/(dashboard)/reports/trial-balance/page.tsx` — Flex header
+- `src/app/(dashboard)/reports/balance-sheet/page.tsx` — Flex header
+- `src/app/(dashboard)/settings/profile/page.tsx` — Flex col form/notification sections, Grid responsive
+- `src/app/(dashboard)/settings/connections/page.tsx` — Flex col sections, Grid replaces CSS grid
+- `src/components/pulse/overview/kpi-card.tsx` — BadgeDelta in header, Bold Metric
+- `src/components/pulse/analytics/chart-grid.tsx` — Tremor Grid replaces CSS grid, Tremor tokens
