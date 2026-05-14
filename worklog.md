@@ -434,3 +434,106 @@
 - `src/app/api/invoices/[id]/route.ts` — Rewritten to use invoice state machine instead of direct status changes
 - `src/components/pulse/ai/context-panel.tsx` — Removed hardcoded counts, added dynamic fetching, improved MCP tools, better suggested prompts
 - `prisma/schema.prisma` — Added Notification and BudgetItem models, updated relations
+
+## Phase 6: CRDT-based Local-First Architecture (Task 10-a)
+
+**Date**: 2026-05-15
+
+### Changes Made
+
+| Step | Description | Status |
+|------|-------------|--------|
+| 81 | CRDT data structures: types.ts (TransactionCRDT, InvoiceCRDT, CategoryCRDT), lww-register.ts, or-set.ts, vector-clock.ts | ✅ Done |
+| 82 | Yjs-based document sync: installed yjs+lib0, yjs-adapter.ts, sync-protocol.ts | ✅ Done |
+| 83 | IndexedDB persistence layer: indexeddb.ts (4 stores), local-store.ts (domain CRUD) | ✅ Done |
+| 84 | Offline-first transaction input: queue.ts (FIFO + retry), network-detector.ts (online/offline + ping) | ✅ Done |
+| 85 | Sync engine with conflict resolution: engine.ts (full sync + WS + polling), reconciler.ts (5 strategies) | ✅ Done |
+| 86 | Optimistic UI updates: optimistic.ts (apply/commit/rollback) | ✅ Done |
+| 87 | Background sync: background.ts (SW sync + exponential backoff) | ✅ Done |
+| 88 | Sync status indicator: sync-indicator.tsx (🟢🟡🔴⚠️ badges) + dashboard header update | ✅ Done |
+| 89 | Undo/Redo via CRDT history: history.ts (undo/redo stacks), use-undo-redo.ts (keyboard shortcuts) | ✅ Done |
+| 90 | Load testing utilities: 7 test scenarios, all passing | ✅ Done |
+
+### Key Decisions
+
+1. **Field-level LWW, NOT document-level** — Each field is an independent LWW-Register. Concurrent edits to different fields of the same transaction merge without data loss. Only truly conflicting field writes use the deterministic nodeId tie-break. This is proper CRDT, not last-write-wins at the document level.
+
+2. **Vector clocks for causal ordering** — Full vector clocks (Map<nodeId, counter>) rather than just Lamport timestamps. This allows the reconciler to distinguish "server is ahead" (fast-forward) from "concurrent edit" (CRDT merge) from "local is ahead" (push to server).
+
+3. **OR-Set for tags** — Transaction tags use Observed-Remove Set semantics. Concurrent add+remove resolves correctly: add wins because the new unique tag survives. This is impossible with simple LWW for set operations.
+
+4. **Invoice status history** — Invoice status transitions stored as a causal history (array of `{from, to, timestamp, nodeId, vectorClock}`). This enables replaying concurrent status changes and resolving them based on causal order, rather than just picking the last write.
+
+5. **Yjs as the CRDT document model** — Yjs provides efficient binary encoding, incremental sync (state vectors + diffs), and a battle-tested CRDT implementation. Our custom LWW-Register and OR-Set layer on top for domain-specific semantics.
+
+6. **3-step sync protocol** — Based on the Yjs sync protocol: Step 1 (exchange state vectors), Step 2 (send missing updates), Step 3 (apply). SyncSession class tracks the state machine. Minimises data transfer during sync.
+
+7. **IndexedDB without external dependencies** — Custom minimal IndexedDB wrapper (4 stores: documents, pendingOps, syncMeta, cache) instead of the `idb` library. Clean async API with proper transaction handling.
+
+8. **Deterministic tie-break: higher nodeId wins** — When LWW-Register timestamps are equal, the lexicographically higher nodeId wins. This is deterministic and consistent across all nodes. CompareTimestamps function used by both LWWRegister and the Yjs adapter.
+
+9. **5 reconciliation strategies** — The reconciler uses vector clock comparison to choose: `no_change` (identical), `fast_forward` (server ahead), `push_local` (local ahead), `merge` (concurrent — field-level LWW), `create_local` (new from server). This is NOT last-write-wins.
+
+10. **Operation queue with entity-scoped ordering** — Pending operations are grouped by entity. Within each group, they're processed in Lamport timestamp order (causality). Across entities, they're processed in parallel. Max 5 retries with exponential backoff.
+
+### CRDT Data Structures
+
+**TransactionCRDT**: `{ id, lamportTimestamp, vectorClock, tombstone, entityType: 'transaction', fields: { accountId, counterpartyId, categoryId, projectId, invoiceId, type, amount, description, reference, status, transactionDate }, tags: ORSetState<string> }`
+
+**InvoiceCRDT**: `{ id, lamportTimestamp, vectorClock, tombstone, entityType: 'invoice', fields: { counterpartyId, number, status, type, amount, taxAmount, dueDate, issuedDate, description }, statusHistory: InvoiceStatusEvent[] }`
+
+**CategoryCRDT**: `{ id, lamportTimestamp, vectorClock, tombstone, entityType: 'category', fields: { name, type, icon, color, parentId, sortOrder } }`
+
+### Packages Added (2)
+
+- yjs@13.6.30 — CRDT document model
+- lib0@0.2.117 — Yjs utility library
+
+### Files Created (22 total)
+
+**CRDT Core**:
+- `src/lib/crdt/types.ts` — Type definitions for all CRDT structures
+- `src/lib/crdt/lww-register.ts` — LWW-Register implementation
+- `src/lib/crdt/or-set.ts` — Observed-Remove Set implementation
+- `src/lib/crdt/vector-clock.ts` — Vector clock for causal ordering
+- `src/lib/crdt/yjs-adapter.ts` — Yjs document management + field updates
+- `src/lib/crdt/sync-protocol.ts` — 3-step sync protocol + SyncSession state machine
+- `src/lib/crdt/history.ts` — Undo/Redo manager
+- `src/lib/crdt/index.ts` — Barrel exports
+
+**Persistence**:
+- `src/lib/persistence/indexeddb.ts` — IndexedDB wrapper (4 stores)
+- `src/lib/persistence/local-store.ts` — Domain-specific CRUD + sync metadata
+- `src/lib/persistence/index.ts` — Barrel exports
+
+**Offline**:
+- `src/lib/offline/queue.ts` — Operation queue with retry
+- `src/lib/offline/network-detector.ts` — Network status detection
+- `src/lib/offline/index.ts` — Barrel exports
+
+**Sync**:
+- `src/lib/sync/engine.ts` — Sync engine singleton
+- `src/lib/sync/reconciler.ts` — 5-strategy reconciliation
+- `src/lib/sync/optimistic.ts` — Optimistic update manager
+- `src/lib/sync/background.ts` — Background sync + SW registration
+- `src/lib/sync/index.ts` — Barrel exports
+- `src/lib/sync/__tests__/load-test.ts` — 7 test scenarios
+
+**UI**:
+- `src/components/pulse/sync/sync-indicator.tsx` — Sync status badge component
+- `src/hooks/use-undo-redo.ts` — Undo/Redo React hook with keyboard shortcuts
+
+### Files Modified (1 total)
+
+- `src/components/pulse/layout/dashboard-header.tsx` — Added SyncIndicator to header
+
+### Load Test Results
+
+All 7 tests passing:
+1. ✅ Vector clock concurrent detection
+2. ✅ LWW-Register merge (deterministic tie-break)
+3. ✅ OR-Set concurrent add+remove
+4. ✅ Reconciliation with concurrent updates (field-level merge)
+5. ✅ Offline/online cycle simulation
+6. ✅ Large batch edits (10 nodes × 100 edits = 1ms)
+7. ✅ Field conflict resolution (deterministic)

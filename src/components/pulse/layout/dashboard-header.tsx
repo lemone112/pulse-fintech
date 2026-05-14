@@ -5,6 +5,7 @@ import { ChevronRight, Home } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { ThemeToggle } from '@/components/pulse/layout/theme-toggle'
 import { CommandMenuTrigger, CommandMenu } from '@/components/pulse/command-palette'
+import { SyncIndicator } from '@/components/pulse/sync/sync-indicator'
 import { useState } from 'react'
 
 /** Map route segments to Russian breadcrumb labels */
@@ -69,8 +70,9 @@ export function DashboardHeader() {
             ))}
           </Flex>
 
-          {/* Right side: search + theme */}
-          <Flex alignItems="center" className="gap-2">
+          {/* Right side: sync indicator + search + theme */}
+          <Flex alignItems="center" className="gap-3">
+            <SyncIndicator />
             <button
               onClick={() => setCommandOpen(true)}
               className="flex items-center gap-2 rounded-tremor-default border border-tremor-border px-3 py-1.5 text-sm text-tremor-content-subtle hover:bg-tremor-background-muted transition-colors"
