@@ -1,8 +1,21 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// ============================================================================
+// PULSE Fintech — Prisma Schema
+// ============================================================================
+//
+// PostgreSQL Migration Plan:
+// When migrating to PostgreSQL:
+//   1. Change provider from "sqlite" to "postgresql"
+//   2. Update DATABASE_URL to a PostgreSQL connection string
+//   3. Change all Float fields back to Decimal @db.Decimal(18, 2):
+//      - Account.balance
+//      - Transaction.amount
+//      - Invoice.amount
+//      - Invoice.taxAmount
+//      - Project.budget
+//   4. Run prisma migrate dev to generate the migration
+//
+// Current: SQLite for development — Float used instead of Decimal
+// ============================================================================
 
 generator client {
   provider = "prisma-client-js"
@@ -13,20 +26,388 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// === AUTH ===
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  avatarUrl     String?
+  role          UserRole  @default(VIEWER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions      Session[]
+  memberships   OrganizationMember[]
+  approvals     ApprovalStep[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
 }
 
-model Post {
+model Session {
   id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  ACCOUNTANT
+  VIEWER
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  inn         String?
+  kpp         String?
+  logoUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  accounts      Account[]
+  memberships   OrganizationMember[]
+  categories    Category[]
+  counterparties Counterparty[]
+  projects      Project[]
+  rules         Rule[]
+  auditLogs     AuditLog[]
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String
+  role           UserRole @default(VIEWER)
+  joinedAt       DateTime @default(now())
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@map("organization_members")
+}
+
+// === FINANCIAL CORE ===
+
+model Account {
+  id             String      @id @default(cuid())
+  organizationId String
+  name           String
+  type           AccountType
+  currency       String      @default("RUB")
+  balance        Float       @default(0)
+  bankName       String?
+  bankBik        String?
+  accountNumber  String?
+  isDefault      Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  transactions   Transaction[]
+
+  @@map("accounts")
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CASH
+  CREDIT
+  DEPOSIT
+}
+
+model Transaction {
+  id              String            @id @default(cuid())
+  organizationId  String
+  accountId       String
+  counterpartyId  String?
+  categoryId      String?
+  projectId       String?
+  type            TransactionType
+  amount          Float
+  description     String?
+  reference       String?
+  status          TransactionStatus @default(PENDING)
+  transactionDate DateTime
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  account         Account           @relation(fields: [accountId], references: [id])
+  counterparty    Counterparty?     @relation(fields: [counterpartyId], references: [id])
+  category        Category?         @relation(fields: [categoryId], references: [id])
+  project         Project?          @relation(fields: [projectId], references: [id])
+  invoice         Invoice?          @relation(fields: [invoiceId], references: [id])
+  invoiceId       String?
+  auditLogs       AuditLog[]
+
+  @@index([organizationId, transactionDate])
+  @@index([organizationId, status])
+  @@index([accountId])
+  @@map("transactions")
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+model Counterparty {
+  id              String            @id @default(cuid())
+  organizationId  String
+  name            String
+  inn             String?
+  type            CounterpartyType  @default(COMPANY)
+  email           String?
+  phone           String?
+  address         String?
+  contactPerson   String?
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  organization    Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  transactions    Transaction[]
+  invoices        Invoice[]
+  documents       Document[]
+
+  @@index([organizationId, name])
+  @@map("counterparties")
+}
+
+enum CounterpartyType {
+  COMPANY
+  INDIVIDUAL
+  PERSON
+}
+
+model Category {
+  id              String       @id @default(cuid())
+  organizationId  String
+  name            String
+  type            CategoryType
+  icon            String?
+  color           String?
+  parentId        String?
+  sortOrder       Int          @default(0)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  parent          Category?    @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children        Category[]   @relation("CategoryHierarchy")
+  transactions    Transaction[]
+
+  @@unique([organizationId, name, type])
+  @@map("categories")
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+}
+
+// === INVOICES & DOCUMENTS ===
+
+model Invoice {
+  id              String        @id @default(cuid())
+  organizationId  String
+  counterpartyId  String
+  number          String
+  status          InvoiceStatus @default(DRAFT)
+  type            InvoiceType   @default(SALES)
+  amount          Float
+  taxAmount       Float?
+  dueDate         DateTime?
+  issuedDate      DateTime?
+  description     String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  counterparty    Counterparty  @relation(fields: [counterpartyId], references: [id])
+  transactions    Transaction[]
+  documents       Document[]
+
+  @@index([organizationId, status])
+  @@map("invoices")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  PARTIALLY_PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum InvoiceType {
+  SALES
+  PURCHASE
+}
+
+model Document {
+  id              String         @id @default(cuid())
+  organizationId  String
+  counterpartyId  String?
+  invoiceId       String?
+  type            DocumentType
+  title           String
+  fileUrl         String?
+  fileName        String?
+  status          DocumentStatus @default(DRAFT)
+  signedAt        DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  counterparty    Counterparty?  @relation(fields: [counterpartyId], references: [id])
+  invoice         Invoice?       @relation(fields: [invoiceId], references: [id])
+
+  @@map("documents")
+}
+
+enum DocumentType {
+  CONTRACT
+  INVOICE
+  ACT
+  INVOICE_ESF
+  WAYBILL
+  OTHER
+}
+
+enum DocumentStatus {
+  DRAFT
+  SENT
+  SIGNED
+  REJECTED
+  ARCHIVED
+}
+
+// === PROJECTS ===
+
+model Project {
+  id              String        @id @default(cuid())
+  organizationId  String
+  name            String
+  description     String?
+  status          ProjectStatus @default(ACTIVE)
+  budget          Float?
+  startDate       DateTime?
+  endDate         DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  transactions    Transaction[]
+
+  @@map("projects")
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+// === RULES & APPROVALS ===
+
+model Rule {
+  id              String       @id @default(cuid())
+  organizationId  String
+  name            String
+  description     String?
+  condition       String       // JSON string in SQLite
+  action          String       // JSON string in SQLite
+  isActive        Boolean      @default(true)
+  priority        Int          @default(0)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("rules")
+}
+
+model Approval {
+  id              String         @id @default(cuid())
+  organizationId  String
+  type            ApprovalType
+  entityType      String
+  entityId        String
+  status          ApprovalStatus @default(PENDING)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  steps           ApprovalStep[]
+
+  @@map("approvals")
+}
+
+enum ApprovalType {
+  INVOICE
+  EXPENSE
+  TRANSFER
+  BUDGET
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model ApprovalStep {
+  id          String         @id @default(cuid())
+  approvalId  String
+  approverId  String
+  status      ApprovalStatus @default(PENDING)
+  comment     String?
+  actedAt     DateTime?
+
+  approval    Approval       @relation(fields: [approvalId], references: [id], onDelete: Cascade)
+  approver    User           @relation(fields: [approverId], references: [id])
+
+  @@map("approval_steps")
+}
+
+// === AUDIT ===
+
+model AuditLog {
+  id              String       @id @default(cuid())
+  organizationId  String?
+  userId          String?
+  action          String
+  entityType      String
+  entityId        String?
+  oldValue        String?
+  newValue        String?
+  createdAt       DateTime     @default(now())
+
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  user            User?         @relation(fields: [userId], references: [id])
+  transaction     Transaction?  @relation(fields: [transactionId], references: [id])
+  transactionId   String?
+
+  @@index([organizationId, createdAt])
+  @@map("audit_logs")
 }

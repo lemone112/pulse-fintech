@@ -148,3 +148,113 @@
 - `src/app/(dashboard)/settings/connections/page.tsx` — Flex col sections, Grid replaces CSS grid
 - `src/components/pulse/overview/kpi-card.tsx` — BadgeDelta in header, Bold Metric
 - `src/components/pulse/analytics/chart-grid.tsx` — Tremor Grid replaces CSS grid, Tremor tokens
+
+## Phase 3: Prisma Schema & API Routes (Task 7-a)
+
+**Date**: 2026-05-14
+
+### Changes Made
+
+| Step | Description | Status |
+|------|-------------|--------|
+| 41-47 | Rewrite Prisma schema with all fintech models (15 models, 10 enums) | ✅ Done |
+| 48 | Create transactions API routes (list + CRUD) | ✅ Done |
+| 49 | Create invoices API routes (list + CRUD + status transitions) | ✅ Done |
+| 50 | Create counterparties API routes (list + CRUD + computed totals) | ✅ Done |
+| 51 | Create categories API routes (list + create, hierarchical) | ✅ Done |
+| 52 | Create reports API routes (P&L, cashflow, balance sheet, trial balance) | ✅ Done |
+| 52b | Create projects, approvals, rules API routes | ✅ Done |
+| 53 | Create AI chat proxy route (SSE streaming, server-side key) | ✅ Done |
+| 54 | Create React Query hooks (8 hook files + barrel export) | ✅ Done |
+| 54b | Create QueryProvider and update layout.tsx | ✅ Done |
+
+### Prisma Schema (15 Models)
+
+**Auth**: User, Session, Organization, OrganizationMember
+**Financial Core**: Account, Transaction, Counterparty, Category
+**Invoices & Documents**: Invoice, Document
+**Projects**: Project
+**Rules & Approvals**: Rule, Approval, ApprovalStep
+**Audit**: AuditLog
+
+**Enums (10)**: UserRole, AccountType, TransactionType, TransactionStatus, CounterpartyType, CategoryType, InvoiceStatus, InvoiceType, ProjectStatus, ApprovalType, ApprovalStatus, DocumentType, DocumentStatus
+
+### API Routes (15 route files)
+
+1. `src/app/api/transactions/route.ts` — GET (list with filters) + POST (create)
+2. `src/app/api/transactions/[id]/route.ts` — GET, PUT, DELETE
+3. `src/app/api/invoices/route.ts` — GET (list) + POST (create)
+4. `src/app/api/invoices/[id]/route.ts` — GET, PUT, DELETE + status transition validation
+5. `src/app/api/counterparties/route.ts` — GET + POST
+6. `src/app/api/counterparties/[id]/route.ts` — GET (with computed totals), PUT, DELETE
+7. `src/app/api/categories/route.ts` — GET + POST (hierarchical)
+8. `src/app/api/reports/pnl/route.ts` — GET (computed P&L by category)
+9. `src/app/api/reports/cashflow/route.ts` — GET (computed cashflow by period with cumulative balance)
+10. `src/app/api/reports/balance/route.ts` — GET (computed balance sheet)
+11. `src/app/api/reports/trial-balance/route.ts` — GET (computed trial balance)
+12. `src/app/api/projects/route.ts` — GET + POST (with spent calculation)
+13. `src/app/api/approvals/route.ts` — GET + POST (with steps creation)
+14. `src/app/api/rules/route.ts` — GET + POST (JSON condition/action parsed)
+15. `src/app/api/ai/chat/route.ts` — POST (SSE streaming proxy, server-side API key)
+
+### React Query Hooks (8 files)
+
+1. `src/lib/hooks/use-transactions.ts` — useTransactions, useTransaction, useCreate/Update/Delete
+2. `src/lib/hooks/use-invoices.ts` — useInvoices, useInvoice, useCreate/Update/Delete
+3. `src/lib/hooks/use-counterparties.ts` — useCounterparties, useCounterparty, useCreate/Update/Delete
+4. `src/lib/hooks/use-categories.ts` — useCategories, useCreateCategory
+5. `src/lib/hooks/use-reports.ts` — usePnLReport, useCashflowReport, useBalanceSheetReport, useTrialBalanceReport
+6. `src/lib/hooks/use-projects.ts` — useProjects, useCreateProject
+7. `src/lib/hooks/use-approvals.ts` — useApprovals, useCreateApproval
+8. `src/lib/hooks/use-rules.ts` — useRules, useCreateRule
+9. `src/lib/hooks/index.ts` — barrel exports for all hooks + types
+
+### Key Decisions
+
+1. **SQLite with PostgreSQL migration plan** — Schema uses `Float` instead of `Decimal @db.Decimal(18, 2)` since SQLite doesn't support `@db.Decimal`. A migration comment at the top of `schema.prisma` documents the exact steps to convert when moving to PostgreSQL. Similarly, `Json` fields use `String` (storing serialized JSON) in SQLite.
+
+2. **Invoice status transition validation** — The invoices `[id]` route includes a `STATUS_TRANSITIONS` map that validates allowed status changes (e.g., DRAFT → SENT, SENT → PAID). Only DRAFT invoices can be deleted.
+
+3. **Counterparty delete protection** — Cannot delete a counterparty that has existing transactions or invoices. Returns 400 with a clear error message.
+
+4. **Report routes compute on-the-fly** — All four report routes (P&L, cashflow, balance sheet, trial balance) compute their results from raw transaction data at query time. No materialized views or pre-computed tables needed for the current scale.
+
+5. **AI chat proxy is server-side only** — The `/api/ai/chat` route reads `AI_API_KEY` from server-only env vars (not `NEXT_PUBLIC_*`). It streams SSE responses back to the client, forwarding the AbortController signal for cancellation support.
+
+6. **QueryProvider defaults** — 1-minute stale time, 5-minute garbage collection, no refetch on window focus, single retry on queries. These defaults balance freshness with performance for a fintech dashboard.
+
+7. **Rules store condition/action as JSON strings** — In SQLite, `Json` type maps to `String`. The rules API route automatically `JSON.parse()` on read and `JSON.stringify()` on write, so consumers always see proper objects.
+
+### Files Created (26 total)
+
+- `prisma/schema.prisma` — complete rewrite (15 models, 10 enums)
+- `src/app/api/transactions/route.ts`
+- `src/app/api/transactions/[id]/route.ts`
+- `src/app/api/invoices/route.ts`
+- `src/app/api/invoices/[id]/route.ts`
+- `src/app/api/counterparties/route.ts`
+- `src/app/api/counterparties/[id]/route.ts`
+- `src/app/api/categories/route.ts`
+- `src/app/api/projects/route.ts`
+- `src/app/api/approvals/route.ts`
+- `src/app/api/rules/route.ts`
+- `src/app/api/reports/pnl/route.ts`
+- `src/app/api/reports/cashflow/route.ts`
+- `src/app/api/reports/balance/route.ts`
+- `src/app/api/reports/trial-balance/route.ts`
+- `src/app/api/ai/chat/route.ts`
+- `src/lib/hooks/use-transactions.ts`
+- `src/lib/hooks/use-invoices.ts`
+- `src/lib/hooks/use-counterparties.ts`
+- `src/lib/hooks/use-categories.ts`
+- `src/lib/hooks/use-reports.ts`
+- `src/lib/hooks/use-projects.ts`
+- `src/lib/hooks/use-approvals.ts`
+- `src/lib/hooks/use-rules.ts`
+- `src/lib/hooks/index.ts`
+- `src/lib/providers/query-provider.tsx`
+
+### Files Modified (2 total)
+
+- `src/app/layout.tsx` — wrapped with QueryProvider
+- `src/lib/hooks/index.ts` — barrel export for all hooks
